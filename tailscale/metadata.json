@@ -1,39 +1,38 @@
 {
-    "desktop-plugin-version": "1.0.0-beta.1",
-    "name":"tailscale",
-    "provider": "Tailscale Inc.",
-    "icon":"tailscale.svg",
-    "vm": {
-        "composefile":"docker-compose.yaml"
-    },
-    "ui":{
-        "dashboard-tab":
-        {
-            "title":"Tailscale",
-            "root":"/ui",
-            "src":"index.html"
-        }
-    },
-    "host": {
-        "binaries": [
-            {
-                "darwin": [
-                    {
-                        "path": "/darwin/hostname"
-                    },
-                    {
-                        "path": "/darwin/tsbrowser"
-                    }
-                ],
-                "windows": [
-                    {
-                        "path": "/windows/hostname.cmd"
-                    },
-                    {
-                        "path": "/windows/tsbrowser.cmd"
-                    }
-                ]
-            }
-        ]
+  "desktop-plugin-version": "1.0.0-beta.1",
+  "name": "tailscale",
+  "provider": "Tailscale Inc.",
+  "icon": "tailscale.svg",
+  "vm": {
+    "composefile": "docker-compose.yaml"
+  },
+  "ui": {
+    "dashboard-tab": {
+      "title": "Tailscale",
+      "root": "/ui",
+      "src": "index.html"
     }
+  },
+  "host": {
+    "binaries": [
+      {
+        "darwin": [
+          {
+            "path": "/darwin/hostname"
+          },
+          {
+            "path": "/darwin/tsbrowser"
+          }
+        ],
+        "windows": [
+          {
+            "path": "/windows/hostname.cmd"
+          },
+          {
+            "path": "/windows/tsbrowser.cmd"
+          }
+        ]
+      }
+    ]
+  }
 }
