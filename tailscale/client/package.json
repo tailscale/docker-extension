@@ -4,14 +4,32 @@
   "private": true,
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build"
+    "build": "react-scripts build",
+    "lint": "eslint 'src/**/*.{js,jsx,ts,tsx}'",
+    "format": "prettier --write 'src/**/*.{js,jsx,ts,tsx}'"
   },
   "dependencies": {
-    "@types/react": "^17.0.0",
-    "@types/react-dom": "^17.0.0",
     "react": "^17.0.2",
-    "react-dom": "^17.0.2",
-    "react-scripts": "4.0.3",
-    "typescript": "^4.1.2"
+    "react-dom": "^17.0.2"
+  },
+  "devDependencies": {
+    "@types/react": "^17.0.38",
+    "@types/react-dom": "^17.0.11",
+    "prettier": "^2.5.1",
+    "react-scripts": "^5.0.0",
+    "typescript": "^4.5.4"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app"
+    ]
+  },
+  "browserslist": [
+    "Chrome 91"
+  ],
+  "prettier": {
+    "semi": false,
+    "printWidth": 80,
+    "trailingComma": "all"
   }
 }
