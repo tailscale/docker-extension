@@ -1,6 +1,6 @@
 services:
   desktop-tailscale:
-    container_name: tailscale_service
+    container_name: ${DESKTOP_PLUGIN_IMAGE}-desktop-extension-service
     network_mode: "host"
     image: ${DESKTOP_PLUGIN_IMAGE}
     devices:
