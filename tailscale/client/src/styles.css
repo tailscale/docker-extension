@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+}
+
+@layer components {
+  .dropdown {
+    transform-origin: var(--radix-dropdown-menu-content-transform-origin);
+  }
+  .dropdown[data-state="open"] {
+    @apply animate-scale-in;
+  }
+  .dropdown[data-state="closed"] {
+    @apply animate-scale-out;
+  }
+}
