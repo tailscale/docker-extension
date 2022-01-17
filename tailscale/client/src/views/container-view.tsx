@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react"
 import cx from "classnames"
 import Avatar from "src/components/avatar"
-import AlertDialog from "src/components/alert-dialog"
+import Dialog from "src/components/dialog"
 import Button from "src/components/button"
 import DropdownMenu from "src/components/dropdown-menu"
 import Tooltip from "src/components/tooltip"
@@ -53,7 +53,7 @@ export default function ContainerView() {
 
   return (
     <div>
-      <AlertDialog
+      <Dialog
         open={confirmLogoutAction !== undefined}
         onOpenChange={(open) =>
           open ? undefined : setConfirmLogoutAction(undefined)
@@ -84,7 +84,7 @@ export default function ContainerView() {
             longer be able to access your containers.
           </p>
         )}
-      </AlertDialog>
+      </Dialog>
       <header className="flex items-center justify-between py-6 px-2">
         <div className="flex">
           <div className="flex items-center space-x-3">
