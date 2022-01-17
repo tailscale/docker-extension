@@ -36,7 +36,7 @@ module.exports = {
       },
       boxShadow: {
         avatar:
-          "0 0 0 1px rgba(136, 152, 170, 0.5), 0 4px 1px rgba(49, 49, 93, 0.1)",
+          "0 0 0 1px rgba(136, 152, 170, 0.5), 0 0 4px 0 rgba(49, 49, 93, 0.1)",
         dialog: "0 10px 40px rgba(0,0,0,0.12), 0 0 16px rgba(0,0,0,0.08)",
         popover:
           "0 0 0 1px rgba(136, 152, 170, 0.1), 0 15px 35px 0 rgba(49, 49, 93, 0.1), 0 5px 15px 0 rgba(0, 0, 0, 0.08)",

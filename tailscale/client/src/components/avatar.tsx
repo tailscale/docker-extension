@@ -12,7 +12,7 @@ export default function Avatar(props: Props) {
   return (
     <AvatarPrimitive.Root
       className={cx(
-        "inline-block rounded-full overflow-hidden select-none border shadow-avatar",
+        "inline-block rounded-full overflow-hidden select-none shadow-avatar",
         className,
       )}
     >

@@ -1,10 +1,15 @@
 import React from "react"
 
-const icons: Record<string, React.ReactNode> = {
-  offline: (
+type IconProps = {
+  className?: string
+  width: string
+  height: string
+}
+
+const icons: Record<string, React.FC<IconProps>> = {
+  offline: (props: IconProps) => (
     <svg
-      width="24"
-      height="24"
+      {...props}
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
@@ -15,18 +20,17 @@ const icons: Record<string, React.ReactNode> = {
       />
     </svg>
   ),
-  container: (
+  container: (props: IconProps) => (
     <svg
-      width="24"
-      height="24"
+      {...props}
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <g clip-path="url(#clip0_2_9581)">
+      <g clipPath="url(#clip0_2_9581)">
         <path
-          fill-rule="evenodd"
-          clip-rule="evenodd"
+          fillRule="evenodd"
+          clipRule="evenodd"
           d="M4.0006 15.2696H3.9873V8.42006H4.00093C4.05191 8.12651 4.24575 7.87385 4.52302 7.75062L12.6491 4.13903C12.8829 4.0352 13.1493 4.0352 13.3831 4.13903L21.5092 7.75062C21.7872 7.87385 21.9812 8.12651 22.0322 8.42006H22.0452V8.55166L22.0454 8.56277L22.0455 8.57496C22.0455 8.58275 22.0454 8.59051 22.0452 8.59826V15.2696H22.0319C22.0407 15.3201 22.0452 15.3719 22.0452 15.4243C22.0452 15.4408 22.0448 15.4571 22.0439 15.4734C22.0256 15.8111 21.8199 16.1109 21.5089 16.2495L13.3828 19.8611C13.2655 19.9126 13.1409 19.9388 13.0162 19.9388C12.8907 19.9388 12.7662 19.9126 12.6488 19.8611L4.52272 16.2495C4.21905 16.1137 4.01546 15.8235 3.99 15.4944C3.98821 15.4712 3.9873 15.4478 3.9873 15.4243C3.9873 15.3719 3.99184 15.3201 4.0006 15.2696H4.0006ZM20.3095 9.08385C20.5944 9.05898 20.8293 9.2508 20.8342 9.51229L20.9388 15.0862C20.9437 15.3477 20.7167 15.5799 20.4318 15.6048C20.1469 15.6296 19.9119 15.4378 19.907 15.1763L19.8025 9.60234C19.7976 9.34086 20.0246 9.10871 20.3095 9.08385ZM18.8495 10.1069C18.8446 9.84538 18.6096 9.65356 18.3248 9.67843C18.0399 9.7033 17.8129 9.93544 17.8178 10.1969L17.9223 15.7709C17.9272 16.0324 18.1622 16.2242 18.4471 16.1993C18.732 16.1745 18.959 15.9424 18.9541 15.6809L18.8495 10.1069ZM16.34 10.5336C16.6249 10.5088 16.8598 10.7006 16.8648 10.9621L16.9693 16.5361C16.9742 16.7976 16.7472 17.0297 16.4623 17.0546C16.1775 17.0794 15.9425 16.8876 15.9376 16.6261L15.833 11.0521C15.8281 10.7906 16.0551 10.5585 16.34 10.5336ZM14.8801 11.9586C14.8751 11.6971 14.6402 11.5053 14.3553 11.5302C14.0704 11.555 13.8434 11.7872 13.8483 12.0487L13.9529 17.6227C13.9577 17.8842 14.1927 18.076 14.4776 18.0511C14.7625 18.0262 14.9895 17.7941 14.9846 17.5326L14.8801 11.9586Z"
           fill="currentColor"
         />
@@ -45,7 +49,12 @@ const icons: Record<string, React.ReactNode> = {
   ),
 }
 
-export default function Icon(props: { name: keyof typeof icons }) {
-  const { name } = props
-  return <>{icons[name]}</>
+export default function Icon(props: {
+  name: keyof typeof icons
+  className?: string
+  size: string
+}) {
+  const { name, size, ...rest } = props
+  const Icon = icons[name]
+  return <Icon {...rest} width={size} height={size} />
 }
