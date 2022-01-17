@@ -13,8 +13,9 @@ import useTailscale, {
 import copyToClipboard from "src/lib/clipboard"
 import { openBrowser } from "src/utils"
 import Icon from "src/components/icon"
+import useTimedToggle from "src/hooks/timed-toggle"
 
-type ConfirmLogoutAction = "switch-account" | "logout"
+type ConfirmLogoutAction = "logout" | "none"
 
 const selector = (state: State) => ({
   backendState: state.backendState,
@@ -30,60 +31,44 @@ const selector = (state: State) => ({
  * the list of containers and Tailscale URLs they can use to access them.
  */
 export default function ContainerView() {
-  const {
-    backendState,
-    loginUser,
-    connect,
-    disconnect,
-    switchAccount,
-    logout,
-  } = useTailscale(selector, shallow)
-  const [confirmLogoutAction, setConfirmLogoutAction] = useState<
-    ConfirmLogoutAction | undefined
-  >(undefined)
+  const { backendState, loginUser, connect, disconnect, logout } = useTailscale(
+    selector,
+    shallow,
+  )
+  const [connecting, setConnecting] = useState(false)
+  const [confirmLogoutAction, setConfirmLogoutAction] =
+    useState<ConfirmLogoutAction>("none")
+
+  const handleConnectClick = useCallback(async () => {
+    setConnecting(true)
+    await connect()
+    setConnecting(false)
+  }, [connect])
 
   const handleConfirmLogout = useCallback(() => {
-    if (confirmLogoutAction === "switch-account") {
-      switchAccount()
-    } else if (confirmLogoutAction === "logout") {
+    if (confirmLogoutAction === "logout") {
       logout()
     }
-    setConfirmLogoutAction(undefined)
-  }, [confirmLogoutAction, switchAccount, logout])
+    setConfirmLogoutAction("none")
+  }, [confirmLogoutAction, logout])
 
   return (
     <div>
       <Dialog
-        open={confirmLogoutAction !== undefined}
+        open={confirmLogoutAction !== "none"}
         onOpenChange={(open) =>
-          open ? undefined : setConfirmLogoutAction(undefined)
+          open ? undefined : setConfirmLogoutAction("none")
         }
         onConfirm={handleConfirmLogout}
-        title={
-          confirmLogoutAction === "switch-account"
-            ? "Switch account?"
-            : "Log out?"
-        }
-        action={
-          confirmLogoutAction === "switch-account"
-            ? "Switch account"
-            : "Log out"
-        }
+        title="Log out?"
+        action="Log out"
         destructive
       >
-        {confirmLogoutAction === "switch-account" ? (
-          <p>
-            Switching Tailscale accounts will disconnect all exposed ports. Any
-            members of your current Tailscale network using these Tailscale URLs
-            will no longer be able to access your containers.
-          </p>
-        ) : (
-          <p>
-            Logging out of Tailscale will disconnect all exposed ports. Any
-            members of your Tailscale network using these Tailscale URLs will no
-            longer be able to access your containers.
-          </p>
-        )}
+        <p>
+          Logging out of Tailscale will disconnect all exposed ports. Any
+          members of your Tailscale network using these Tailscale URLs will no
+          longer be able to access your containers.
+        </p>
       </Dialog>
       <header className="flex items-center justify-between py-6 px-2">
         <div className="flex">
@@ -91,12 +76,13 @@ export default function ContainerView() {
             <DropdownMenu
               asChild
               trigger={
-                <button className="flex items-center overflow-hidden rounded-full focus:outline-none focus:ring">
+                <button className="-ml-3 px-3 py-2 rounded-lg flex items-center overflow-hidden transition focus:outline-none hover:bg-[rgba(31,41,55,0.05)] dark:hover:bg-[rgba(255,255,255,0.05)]  focus-visible:bg-[rgba(31,41,55,0.05)] dark:focus-visible:bg-[rgba(255,255,255,0.05)]">
                   <Avatar
                     name={loginUser?.displayName || "Unknown"}
                     src={loginUser?.profilePicUrl}
-                    className="w-8 h-8"
+                    className="w-6 h-6"
                   />
+                  <div className="font-medium ml-2">{loginUser?.loginName}</div>
                 </button>
               }
             >
@@ -112,40 +98,43 @@ export default function ContainerView() {
                 Download Tailscale
               </DropdownMenu.Link>
               <DropdownMenu.Separator />
-              {/* TODO: make this log in as another user */}
-              <DropdownMenu.Item
-                onSelect={() => setConfirmLogoutAction("switch-account")}
-              >
-                Log in to a different account…
-              </DropdownMenu.Item>
               <DropdownMenu.Item
                 onSelect={() => setConfirmLogoutAction("logout")}
               >
                 Log out
               </DropdownMenu.Item>
             </DropdownMenu>
-            <div className="font-medium">{loginUser?.loginName}</div>
           </div>
         </div>
         <div className="ml-auto">
           {backendState === "Stopped" ? (
-            <Button onClick={connect}>Connect</Button>
+            <Button loading={connecting} onClick={handleConnectClick}>
+              Connect
+            </Button>
           ) : (
             <Button onClick={disconnect}>Disconnect</Button>
           )}
         </div>
       </header>
       {backendState === "Stopped" ? (
-        <div className="flex flex-col items-center text-center py-3">
+        <div className="flex flex-col items-center text-center max-w-lg mx-auto py-8">
           {/* TODO: refine the language in this state. */}
           <div className="mb-4">
-            <Icon name="offline" />
+            <Icon className="text-gray-300" name="offline" size="36" />
           </div>
-          <p className="mb-6">
-            Tailscale is disconnected. Reconnect to your network to continue
-            sharing your containers.
+          <h2 className="text-lg font-semibold mb-2">
+            Tailscale is disconnected
+          </h2>
+          <p className="mb-8">
+            Reconnect to continue sharing your containers with your private
+            network.
           </p>
-          <Button variant="primary" onClick={connect}>
+          <Button
+            variant="primary"
+            size="lg"
+            loading={connecting}
+            onClick={handleConnectClick}
+          >
             Connect
           </Button>
         </div>
@@ -173,6 +162,7 @@ function ContainerTable() {
             <tr>
               <th className={tableHeaderClass}>Container</th>
               <th className={tableHeaderClass}>Tailscale URL</th>
+              <th className={tableHeaderClass} />
             </tr>
           </thead>
           <tbody>
@@ -198,37 +188,69 @@ function ContainerTable() {
 
 function ContainerRow(props: { container: Container; tailscaleIP: string }) {
   const { container, tailscaleIP } = props
+  const [copied, setCopied] = useTimedToggle(false, 1000)
+  const [showTooltip, setShowTooltip] = useState(false)
+  const publicPort = container.Ports.find((p) => p.PublicPort !== undefined)
+  const tailscaleIPPort = `${tailscaleIP}:${publicPort?.PublicPort}`.trim()
+  const tailscaleURL = `http://${tailscaleIPPort}`
 
-  if (container.Labels["com.docker.desktop.plugin"]) {
-    // Don't show extension containers
-    return null
-  }
-
-  const tailscaleIPPort =
-    `${tailscaleIP}:${container.Ports[0].PublicPort}`.trim()
-  const copyText = `http://${tailscaleIPPort}`
+  const handleCopyClick = useCallback(() => {
+    copyToClipboard(tailscaleURL)
+    setShowTooltip(true)
+    setCopied(true)
+  }, [tailscaleURL, setCopied])
 
   return (
-    <tr className="group hover:bg-[rgba(255,255,255,0.7)] dark:hover:bg-docker-dark-gray-700 transition">
-      <td className={tableCellClass}>
-        {container.Names.map((n) => n.slice(1).trim()).join(",")}
+    <tr className="group hover:bg-[rgba(255,255,255,0.5)] dark:hover:bg-docker-dark-gray-700 transition">
+      <td className={cx(tableCellClass, "flex items-center")}>
+        <Icon
+          className={cx("mr-3", {
+            "text-green-300": container.State === "running",
+            "text-gray-600": container.State !== "running",
+          })}
+          name="container"
+          size="24"
+        />
+        <span>{container.Names.map((n) => n.slice(1).trim()).join(",")}</span>
       </td>
-      <td className={tableCellClass}>{tailscaleIPPort}</td>
+      <td className={tableCellClass}>
+        <Tooltip
+          asChild
+          content={
+            <span>{copied ? <>✓ Copied!</> : "Copy URL to clipboard"}</span>
+          }
+          closeOnClick={false}
+          open={showTooltip}
+          onOpenChange={setShowTooltip}
+        >
+          <button className={tableButtonClass} onClick={handleCopyClick}>
+            {tailscaleIPPort}
+          </button>
+        </Tooltip>
+      </td>
       <td className={cx(tableCellClass, "space-x-4 text-right")}>
         <Tooltip asChild content="Open URL in browser">
-          <button onClick={() => openBrowser(copyText)}>Open</button>
-        </Tooltip>
-        <Tooltip asChild content="Copy URL to clipboard">
-          <button onClick={() => copyToClipboard(copyText)}>Copy</button>
+          <button
+            className={tableButtonClass}
+            onClick={() => openBrowser(tailscaleURL)}
+          >
+            Open
+          </button>
         </Tooltip>
       </td>
     </tr>
   )
 }
 
-const tableHeaderClass =
-  "uppercase tracking-wider text-gray-700 dark:text-gray-200 text-xs px-2 py-4"
-const tableCellClass = "py-4 px-2 border-t border-gray-300 dark:border-gray-700"
+const borderColor = "border-gray-200 dark:border-[rgba(255,255,255,0.09)]"
+const tablePadding = "px-2 py-4"
+const tableHeaderClass = cx(
+  "uppercase tracking-wider text-gray-700 dark:text-gray-200 text-xs border-b",
+  tablePadding,
+  borderColor,
+)
+const tableCellClass = cx("border-b h-14", tablePadding, borderColor)
+const tableButtonClass = "focus:outline-none focus-visible:ring"
 
 const hostWarningSelector = (state: State) => ({
   hostStatus: state.hostStatus,

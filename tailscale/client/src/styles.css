@@ -34,6 +34,67 @@
     @apply animate-slide-out;
   }
 
+  .tooltip {
+    transform-origin: var(--radix-tooltip-content-transform-origin);
+  }
+  .tooltip[data-state="instant-open"][data-side="bottom"],
+  .tooltip[data-state="delayed-open"][data-side="bottom"] {
+    animation: tooltip-in-bottom 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .tooltip[data-state="closed"][data-side="bottom"] {
+    animation: tooltip-out-bottom 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .tooltip[data-state="instant-open"][data-side="top"],
+  .tooltip[data-state="delayed-open"][data-side="top"] {
+    animation: tooltip-in-top 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .tooltip[data-state="closed"][data-side="top"] {
+    animation: tooltip-out-top 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes tooltip-in-top {
+    0% {
+      opacity: 0;
+      transform: translateY(10%) scale(0.95);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0%) scale(1);
+    }
+  }
+  @keyframes tooltip-out-top {
+    0% {
+      opacity: 1;
+      transform: translateY(0%) scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(10%) scale(0.95);
+    }
+  }
+
+  @keyframes tooltip-in-bottom {
+    0% {
+      opacity: 0;
+      transform: translateY(-10%) scale(0.95);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0%) scale(1);
+    }
+  }
+
+  @keyframes tooltip-out-bottom {
+    0% {
+      opacity: 1;
+      transform: translateY(0%) scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-10%) scale(0.95);
+    }
+  }
+
   /**
    * .loading-dots creates a set of three dots that pulse for indicating loading
    * states where a more horizontal appearance is helpful.

@@ -30,9 +30,9 @@ const Button = React.forwardRef(
             "bg-docker-dark-red-400 hover:bg-docker-dark-red-500 text-white":
               !disabled && variant === "danger",
             "bg-red-500 text-white": disabled && variant === "danger",
-            "bg-gray-300 text-gray-500 dark:text-gray-300 dark:bg-docker-dark-gray-500":
+            "bg-gray-200 text-gray-500 dark:text-gray-300 dark:bg-docker-dark-gray-500":
               disabled && variant === "secondary",
-            "bg-gray-300 hover:bg-gray-400 text-gray-700 dark:text-white dark:bg-docker-dark-gray-500 dark:hover:bg-docker-dark-gray-400":
+            "bg-gray-200 hover:bg-gray-300 text-gray-700 dark:text-white dark:bg-docker-dark-gray-500 dark:hover:bg-docker-dark-gray-400":
               !disabled && variant === "secondary",
             "text-transparent dark:text-transparent": loading,
           },

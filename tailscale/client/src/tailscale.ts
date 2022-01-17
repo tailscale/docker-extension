@@ -161,8 +161,12 @@ const useTailscale = create<State>((set, get) => ({
         initialized: true,
         backendState: status.BackendState,
         tailscaleIPs: status.Self.TailscaleIPs,
-        containers: containers.filter((c) => c.Ports.some((p) => p.PublicPort)),
         loginUser: getLoginUserFromStatus(status),
+        containers: containers
+          // only show containers that expose a public port
+          .filter((c) => c.Ports.some((p) => p.PublicPort))
+          // only show non-extension containers
+          .filter((c) => c.Labels["com.docker.desktop.plugin"] === undefined),
       }))
     } catch (err) {
       console.error("Error in fetchStatus:", err)
