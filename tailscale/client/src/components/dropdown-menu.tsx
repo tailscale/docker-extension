@@ -65,7 +65,7 @@ DropdownMenu.Separator = DropdownSeparator
 
 const menuItemClasses = "block px-4 py-2"
 const menuItemInteractiveClasses =
-  "cursor-pointer focus:outline-none hover:bg-gray-100 focus:bg-gray-100 dark:hover:enabled:bg-[#5E6971] dark:focus:bg-[#5E6971]"
+  "cursor-pointer focus:outline-none hover:enabled:bg-gray-100 focus:bg-gray-100 dark:hover:enabled:bg-[#5E6971] dark:focus:bg-[#5E6971]"
 
 type CommonMenuItemProps = {
   className?: string

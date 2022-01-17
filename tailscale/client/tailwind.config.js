@@ -44,6 +44,10 @@ module.exports = {
       animation: {
         "scale-in": "scale-in 120ms cubic-bezier(0.16, 1, 0.3, 1)",
         "scale-out": "scale-out 120ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "fade-in": "fade-in 200ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "fade-out": "fade-out 200ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "slide-in": "slide-in 250ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "slide-out": "slide-out 250ms cubic-bezier(0.16, 1, 0.3, 1)",
       },
       keyframes: {
         "scale-in": {
@@ -63,6 +67,42 @@ module.exports = {
           },
           "100%": {
             transform: "scale(0.94)",
+            opacity: "0",
+          },
+        },
+        "fade-in": {
+          "0%": {
+            opacity: "0",
+          },
+          "100%": {
+            opacity: "1",
+          },
+        },
+        "fade-out": {
+          "0%": {
+            opacity: "1",
+          },
+          "100%": {
+            opacity: "0",
+          },
+        },
+        "slide-in": {
+          "0%": {
+            transform: "scale(0.97) translateY(3%)",
+            opacity: "0",
+          },
+          "100%": {
+            transform: "scale(1)  translateY(0%)",
+            opacity: "1",
+          },
+        },
+        "slide-out": {
+          "0%": {
+            transform: "scale(1) translateY(0%)",
+            opacity: "1",
+          },
+          "100%": {
+            transform: "scale(0.97) translateY(3%)",
             opacity: "0",
           },
         },

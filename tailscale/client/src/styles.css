@@ -20,4 +20,61 @@
   .dropdown[data-state="closed"] {
     @apply animate-scale-out;
   }
+
+  .dialog-overlay[data-state="open"] {
+    @apply animate-fade-in;
+  }
+  .dialog-overlay[data-state="closed"] {
+    @apply animate-fade-out;
+  }
+  .dialog-content[data-state="open"] {
+    @apply animate-slide-in;
+  }
+  .dialog-content[data-state="closed"] {
+    @apply animate-slide-out;
+  }
+
+  /**
+   * .loading-dots creates a set of three dots that pulse for indicating loading
+   * states where a more horizontal appearance is helpful.
+   */
+  .loading-dots {
+    display: inline-flex;
+    align-items: center;
+  }
+  .loading-dots span {
+    animation-name: loading-dots-blink;
+    animation-duration: 1.4s;
+    animation-iteration-count: infinite;
+    animation-fill-mode: both;
+    width: 0.35em;
+    height: 0.35em;
+    border-radius: 50%;
+    background-color: currentColor;
+    display: inline-block;
+    margin: 0 0.15em;
+  }
+  .loading-dots span:nth-child(2) {
+    animation-delay: 200ms;
+  }
+  .loading-dots span:nth-child(3) {
+    animation-delay: 400ms;
+  }
+  @keyframes loading-dots-blink {
+    0% {
+      opacity: 0.2;
+    }
+    20% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0.2;
+    }
+  }
+}
+
+@layer utilities {
+  .rendering-pixelated {
+    image-rendering: pixelated;
+  }
 }

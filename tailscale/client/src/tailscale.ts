@@ -1,6 +1,6 @@
 import create from "zustand"
 import shallowCompare from "zustand/shallow"
-import { openBrowser } from "src/utils"
+import { isMacOS, isWindows, openBrowser } from "src/utils"
 
 // BackendState
 // Keep in sync with https://github.com/tailscale/tailscale/blob/main/ipn/backend.go
@@ -282,8 +282,19 @@ export type HostStatus = {
   loginName: string
 }
 
+const windowsTailscalePath = "C:\\Program Files\\Tailscale\\tailscale.exe"
+const macOSTailscalePath =
+  "/Applications/Tailscale.app/Contents/MacOS/tailscale"
+const linuxTailscalePath = "/usr/bin/env tailscale"
+
 async function isTailscaleOnHost(): Promise<boolean> {
   try {
+    if (isWindows()) {
+      const output = await window.ddClient.execHostCmd(
+        `Test-Path -Path '${windowsTailscalePath}' -PathType Leaf`,
+      )
+      return output.stdout.trim().toLowerCase() === "true"
+    }
     await window.ddClient.execHostCmd(
       "/usr/bin/env test -d /Applications/Tailscale.app",
     )
@@ -296,9 +307,12 @@ async function isTailscaleOnHost(): Promise<boolean> {
 }
 
 async function tailscaleOnHostStatus() {
-  const output = await window.ddClient.execHostCmd(
-    "/Applications/Tailscale.app/Contents/MacOS/tailscale status --json",
-  )
+  const hostPath = isWindows()
+    ? windowsTailscalePath
+    : isMacOS()
+    ? macOSTailscalePath
+    : linuxTailscalePath
+  const output = await window.ddClient.execHostCmd(`${hostPath} status --json`)
   return JSON.parse(output.stdout) as StatusResponse
 }
 
@@ -307,8 +321,17 @@ async function tailscaleOnHostStatus() {
  * is installed.
  */
 export async function openTailscaleOnHost(): Promise<void> {
-  // TODO: support Windows too.
-  await window.ddClient.execHostCmd("/usr/bin/env open -a 'Tailscale'")
+  if (isWindows()) {
+    // TODO: support older paths for the Tailscale app.
+    await window.ddClient.execHostCmd(`start ${windowsTailscalePath}`)
+    return
+  }
+  if (isMacOS()) {
+    await window.ddClient.execHostCmd("/usr/bin/env open -a 'Tailscale'")
+    return
+  }
+  // TODO: support Linux. For now we just don't open anything.
+  return
 }
 
 /**
