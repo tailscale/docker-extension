@@ -1,51 +1,68 @@
-# Desktop Extension Samples
+# Tailscale Docker Extension
 
-[![Netlify Status](https://api.netlify.com/api/v1/badges/883a0d5e-15c4-471b-a3e3-84cf27d2fced/deploy-status)](https://app.netlify.com/sites/docker-desktop-extensions/deploys)
+This repository hosts the code for Tailscale's [Docker](https://docker.com) extension. The extension lets Docker users expose public ports from their local containers onto their Tailscale network.
 
-This repository includes Desktop Extension samples.
+### Developing
 
-:warning: **This work is experimental and still in progress, features and APIs detailed are subject to change**
-
-## Prerequisites
+> :warning: Docker extensions are still in active development, and this information may change as it gets closer to release.
 
 To get started with Docker Extensions you will need a specific Docker Desktop build that comes with extension capabilities and the Extensions CLI.
 
-See [prerequisites](docs/index.md#prerequisites).
+Install the following:
 
-## Tutorials
+- A [custom build of Docker Desktop](https://github.com/docker/desktop-extension-samples/releases) with support for extensions
+- An extension to the [Docker CLI](https://github.com/docker/desktop-extension-samples/releases)
+- A local install of Node (v16.13.1 at the time of writing)
+- A local install of yarn (v1.22.17 at the time of writing)
 
-- [Create a minimal frontend extension](docs/tutorials/minimal-frontend-extension.md) - a minimal Desktop Extension containing only a UI part based on HTML.
-- [Create a minimal backend extension](docs/tutorials/minimal-backend-extension.md) - a Desktop Extension containing a UI part connecting to a minimal backend.
-- [Create a ReactJS-based extension](docs/tutorials/react-extension.md) - a minimal Desktop Extension containing only a UI part based on ReactJS.
+### Setting up
 
-## Docker Desktop Extension Model
+Once you have all the prerequisite pieces installed, enable the extension beta.
 
-Desktop Extensions are packaged and distributed as Docker images.
-Development of extensions can be done locally without the need to push the extension to Docker Hub.
-This is described in [Extension Distribution](docs/extensions/DISTRIBUTION.md).
-
-The extension image must have some specific content, described [here](docs/extensions/METADATA.md)
-
-## Developing Docker Extensions
-
-The [Extensions CLI](docs/dev/cli/usage.md) is an extension development tool that can be used to manage Docker extensions.
-
-This repository contains multiple extensions, each one is defined in an individual directories at the root of the repository.
-These are Docker developed samples that are not meant to be final products.
-
-To try one of them, navigate to the directory of the extension then [use the CLI to build and install the extension](docs/dev/cli/build-test-install-extension.md) on Docker Desktop.
-
-The [overview](docs/dev/overview.md) describes how to get started developing your custom Docker Extension. It also covers how to open the Chrome Dev Tools and show the extension containers.
-
-The extension UI has access to an extension API to invoke backend operations from the UI, e.g. listing running containers, images, etc.
-Furthermore, you can communicate with your extension backend service or invoke a binary on the host or in the VM.
-
-## Build the documentation
-
-We use [mkdocs-material](https://squidfunk.github.io/mkdocs-material/) to create a static site from a set of Markdown files under [docs](./docs).
-
-```bash
-docker run --rm -it -p 8000:8000 --rm -v ${PWD}:/docs squidfunk/mkdocs-material
+```
+docker extension enable
 ```
 
-Visit http://0.0.0.0:8000/
+Next, build the extension Docker container…
+
+```
+make extension
+```
+
+… and install it:
+
+```
+docker extension install <extension-id>
+```
+
+Navigate to Docker Desktop, and you should now see a new "Tailscale" section in the sidebar menu.
+
+### Developing the extension backend
+
+Any changes to the extension metadata or backend will require you to rebuild then extension…
+
+```
+make extension
+```
+
+… and then reinstall it.
+
+```
+docker extension install <extension-id>
+```
+
+### Developing the extension UI
+
+The extension UI is a React app that is statically bundled at build time. However, re-building the Docker container on each change is slow, so we can instead instruct the Docker Desktop app to use a local server to serve the UI instead.
+
+To start the local UI server, navigate to `ui` and run:
+
+```
+yarn start
+```
+
+This will spin up a local server on [localhost:3000](http://localhost:3000). Once running, instruct Docker Desktop to use that server as your extension UI with the command:
+
+```
+docker extension dev ui-source <extension-id> http://localhost:3000
+```

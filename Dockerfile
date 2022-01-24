@@ -6,16 +6,16 @@ RUN curl -fSsLo /tmp/tailscale.tgz https://pkgs.tailscale.com/unstable/tailscale
     && mkdir /out \
     && tar -C /out -xzf /tmp/tailscale.tgz --strip-components=1
 
-FROM node:14.17-alpine3.13 AS client-builder
-WORKDIR /app/client
+FROM node:14.17-alpine3.13 AS ui-builder
+WORKDIR /app/ui
 # cache packages in layer
-COPY client/package.json /app/client/package.json
-COPY client/yarn.lock /app/client/yarn.lock
+COPY ui/package.json /app/ui/package.json
+COPY ui/yarn.lock /app/ui/yarn.lock
 ARG TARGETARCH
 RUN yarn config set cache-folder /usr/local/share/.cache/yarn-${TARGETARCH}
 RUN --mount=type=cache,target=/usr/local/share/.cache/yarn-${TARGETARCH} yarn
 # install
-COPY client /app/client
+COPY ui /app/ui
 RUN --mount=type=cache,target=/usr/local/share/.cache/yarn-${TARGETARCH} yarn build
 
 FROM debian:bullseye-slim
@@ -36,7 +36,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=tailscale /out/tailscale /app/tailscale
 COPY --from=tailscale /out/tailscaled /app/tailscaled
-COPY --from=client-builder /app/client/dist ui
+COPY --from=ui-builder /app/ui/dist ui
 COPY tailscale.svg .
 COPY metadata.json .
 COPY background-output.sh /app/background-output.sh
