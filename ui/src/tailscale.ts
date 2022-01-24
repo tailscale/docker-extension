@@ -277,7 +277,13 @@ async function getLoginInfo(hostname: string): Promise<TailscaleUpResponse> {
   // tells us that it's already running.
   const command = `/app/background-output.sh /app/tailscale up --hostname=${hostname}-docker-desktop --accept-dns=false --json --reset --force-reauth`
   const resp = await window.ddClient.backend.execInVMExtension(command)
-  const info = JSON.parse(resp.stdout)
+  let info = JSON.parse(resp.stdout)
+  if (typeof info.AuthURL === "string") {
+    // Add referral partner info to the URL
+    const authURL = new URL(info.AuthURL)
+    authURL.searchParams.set("partner", "docker")
+    info.AuthURL = authURL.toString()
+  }
   return info as TailscaleUpResponse
 }
 
