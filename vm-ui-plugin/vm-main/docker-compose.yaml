@@ -1,8 +1,0 @@
-services:
-  devenv-volumes:
-    image: ${DESKTOP_PLUGIN_IMAGE}
-    cap_add:
-      - DAC_OVERRIDE
-      - FOWNER
-    volumes:
-      - /var/lib/docker:/var/lib/docker
