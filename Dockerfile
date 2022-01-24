@@ -19,7 +19,7 @@ COPY ui /app/ui
 RUN --mount=type=cache,target=/usr/local/share/.cache/yarn-${TARGETARCH} yarn build
 
 FROM debian:bullseye-slim
-LABEL org.opencontainers.image.title="tailscale" \
+LABEL org.opencontainers.image.title="Tailscale" \
     com.docker.desktop.extension.icon="https://f-droid.org/repo/icons-640/com.tailscale.ipn.78.png" \
     org.opencontainers.image.description="Connect your Docker containers to your secure private network." \
     org.opencontainers.image.authors="Tailscale Inc." \
