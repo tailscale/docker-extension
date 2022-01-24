@@ -119,15 +119,16 @@ type DropdownMenuLinkProps = {
 function DropdownMenuLink(props: DropdownMenuLinkProps) {
   const { className, children, disabled, href, ...rest } = props
 
-  // handleClick handles when users click on the link.
-  const handleClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation()
-  }, [])
-
   // handleSelect handles when users use the keyboard to select a link.
   const handleSelect = useCallback(() => {
     openBrowser(href)
   }, [href])
+
+  // handleClick handles when users click on the link.
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    handleSelect()
+  }, [handleSelect])
 
   return (
     <MenuPrimitive.Item
@@ -144,7 +145,8 @@ function DropdownMenuLink(props: DropdownMenuLinkProps) {
       onSelect={handleSelect}
       {...rest}
     >
-      <a className="stretched-link" href={href} onClick={handleClick}>
+      {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+      <a className="stretched-link" href="#" onClick={handleClick}>
         {children}
       </a>
     </MenuPrimitive.Item>

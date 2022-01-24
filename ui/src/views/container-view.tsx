@@ -75,6 +75,7 @@ export default function ContainerView() {
           <div className="flex items-center space-x-3">
             <DropdownMenu
               asChild
+              align="start"
               trigger={
                 <button className="-ml-3 px-3 py-2 rounded-lg flex items-center overflow-hidden transition focus:outline-none hover:bg-[rgba(31,41,55,0.05)] dark:hover:bg-[rgba(255,255,255,0.05)]  focus-visible:bg-[rgba(31,41,55,0.05)] dark:focus-visible:bg-[rgba(255,255,255,0.05)]">
                   <Avatar
