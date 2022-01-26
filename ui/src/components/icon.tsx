@@ -106,6 +106,20 @@ const icons: Record<string, React.FC<IconProps>> = {
       <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
     </svg>
   ),
+  dot: (props: IconProps) => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="1"></circle>
+    </svg>
+  ),
 }
 
 export default function Icon(props: {

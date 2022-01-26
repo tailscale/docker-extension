@@ -61,8 +61,8 @@ To start the local UI server, navigate to `ui` and run:
 yarn start
 ```
 
-This will spin up a local server on [localhost:3000](http://localhost:3000). Once running, instruct Docker Desktop to use that server as your extension UI with the command:
+This will spin up a local server on [localhost:3011](http://localhost:3011). Once running, instruct Docker Desktop to use that server as your extension UI with the command:
 
 ```
-docker extension dev ui-source <extension-id> http://localhost:3000
+docker extension dev ui-source <extension-id> http://localhost:3011
 ```

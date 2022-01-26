@@ -55,15 +55,18 @@ DropdownMenu.defaultProps = {
 DropdownMenu.Group = DropdownMenuGroup
 DropdownMenu.Item = DropdownMenuItem
 DropdownMenu.Link = DropdownMenuLink
+DropdownMenu.Label = DropdownLabel
+DropdownMenu.ItemIndicator = DropdownItemIndicator
 DropdownMenu.RadioGroup = MenuPrimitive.RadioGroup
-DropdownMenu.RadioItem = MenuPrimitive.RadioItem
+DropdownMenu.RadioItem = DropdownRadioItem
 /**
  * DropdownMenu.Separator should be used to divide items into sections within a
  * DropdownMenu.
  */
 DropdownMenu.Separator = DropdownSeparator
 
-const menuItemClasses = "block px-4 py-2"
+const menuItemPadding = "pl-5 pr-4 py-2"
+const menuItemClasses = cx("block", menuItemPadding)
 const menuItemInteractiveClasses =
   "cursor-pointer focus:outline-none hover:enabled:bg-gray-100 focus:bg-gray-100 dark:hover:enabled:bg-[#5E6971] dark:focus:bg-[#5E6971]"
 
@@ -171,6 +174,53 @@ function DropdownSeparator(props: DropdownSeparatorProps) {
       className={cx(
         "my-1 border-b border-gray-200 dark:border-white dark:opacity-10",
         className,
+      )}
+      {...rest}
+    />
+  )
+}
+
+function DropdownLabel(props: MenuPrimitive.MenuLabelProps) {
+  const { className, ...rest } = props
+  return (
+    <MenuPrimitive.Label
+      className={cx(
+        className,
+        menuItemClasses,
+        "text-xs text-gray-500 dark:text-gray-400",
+      )}
+      {...rest}
+    />
+  )
+}
+
+function DropdownRadioItem(props: MenuPrimitive.MenuRadioItemProps) {
+  const { className, disabled, ...rest } = props
+
+  return (
+    <MenuPrimitive.RadioItem
+      className={cx(
+        "relative",
+        className,
+        menuItemClasses,
+        menuItemInteractiveClasses,
+        {
+          "text-gray-400 bg-white cursor-default": disabled,
+        },
+      )}
+      disabled={disabled}
+      {...rest}
+    />
+  )
+}
+
+function DropdownItemIndicator(props: MenuPrimitive.MenuItemIndicatorProps) {
+  const { className, ...rest } = props
+  return (
+    <MenuPrimitive.ItemIndicator
+      className={cx(
+        className,
+        "absolute right-4 top-1/2 -translate-y-1/2 z-20",
       )}
       {...rest}
     />
