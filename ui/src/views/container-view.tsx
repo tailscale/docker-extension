@@ -11,7 +11,7 @@ import useTailscale, {
   openTailscaleOnHost,
 } from "src/tailscale"
 import copyToClipboard from "src/lib/clipboard"
-import { openBrowser } from "src/utils"
+import { isWindows, openBrowser } from "src/utils"
 import Icon from "src/components/icon"
 import useTimedToggle from "src/hooks/timed-toggle"
 
@@ -23,7 +23,6 @@ const selector = (state: State) => ({
   connect: state.connect,
   disconnect: state.disconnect,
   switchAccount: state.switchAccount,
-  logout: state.logout,
 })
 
 /**
@@ -31,13 +30,11 @@ const selector = (state: State) => ({
  * the list of containers and Tailscale URLs they can use to access them.
  */
 export default function ContainerView() {
-  const { backendState, loginUser, connect, disconnect, logout } = useTailscale(
+  const { backendState, loginUser, connect, disconnect } = useTailscale(
     selector,
     shallow,
   )
   const [connecting, setConnecting] = useState(false)
-  const [confirmLogoutAction, setConfirmLogoutAction] =
-    useState<ConfirmLogoutAction>("none")
 
   const handleConnectClick = useCallback(async () => {
     setConnecting(true)
@@ -45,31 +42,8 @@ export default function ContainerView() {
     setConnecting(false)
   }, [connect])
 
-  const handleConfirmLogout = useCallback(() => {
-    if (confirmLogoutAction === "logout") {
-      logout()
-    }
-    setConfirmLogoutAction("none")
-  }, [confirmLogoutAction, logout])
-
   return (
     <div>
-      <Dialog
-        open={confirmLogoutAction !== "none"}
-        onOpenChange={(open) =>
-          open ? undefined : setConfirmLogoutAction("none")
-        }
-        onConfirm={handleConfirmLogout}
-        title="Log out?"
-        action="Log out"
-        destructive
-      >
-        <p>
-          Logging out of Tailscale will disconnect all exposed ports. Any
-          members of your Tailscale network using these Tailscale URLs will no
-          longer be able to access your containers.
-        </p>
-      </Dialog>
       <header className="flex items-center justify-between py-5">
         <div>
           <div className="font-semibold text-xl">Tailscale</div>
@@ -97,49 +71,7 @@ export default function ContainerView() {
               Disconnect
             </Button>
           )}
-          <DropdownMenu
-            asChild
-            align="end"
-            trigger={
-              <button className="-ml-3 px-3 py-2 group rounded-lg flex items-center overflow-hidden transition focus:outline-none hover:bg-[rgba(31,41,55,0.05)] dark:hover:bg-[rgba(255,255,255,0.05)]  focus-visible:bg-[rgba(31,41,55,0.05)] dark:focus-visible:bg-[rgba(255,255,255,0.05)]">
-                <Avatar
-                  name={loginUser?.displayName || "Unknown"}
-                  src={loginUser?.profilePicUrl}
-                  className="w-6 h-6"
-                />
-                <Icon
-                  className="ml-2 text-gray-500 group-hover:text-gray-400 group-focus:text-gray-400 transition-colors"
-                  name="chevron-down"
-                  size="16"
-                />
-              </button>
-            }
-          >
-            <DropdownMenu.Group>
-              <p className="font-medium min-w-[12rem]">
-                {loginUser?.displayName}
-              </p>
-              <p className="opacity-80">{loginUser?.loginName}</p>
-            </DropdownMenu.Group>
-            <DropdownMenu.Separator />
-            <DropdownMenu.Link href="https://tailscale.com/download">
-              Tailscale docs
-            </DropdownMenu.Link>
-            {loginUser?.isAdmin && (
-              <DropdownMenu.Link href="https://login.tailscale.com/admin">
-                Admin console
-              </DropdownMenu.Link>
-            )}
-            <DropdownMenu.Link href="https://tailscale.com/download">
-              Download Tailscale
-            </DropdownMenu.Link>
-            <DropdownMenu.Separator />
-            <DropdownMenu.Item
-              onSelect={() => setConfirmLogoutAction("logout")}
-            >
-              Log out
-            </DropdownMenu.Item>
-          </DropdownMenu>
+          <HeaderMenu />
         </div>
       </header>
       {backendState === "Stopped" ? (
@@ -168,6 +100,155 @@ export default function ContainerView() {
         <ContainerTable />
       )}
     </div>
+  )
+}
+
+const menuSelector = (state: State) => ({
+  loginUser: state.loginUser,
+  loginServer: state.loginServer,
+  logout: state.logout,
+  setLoginServer: state.setLoginServer,
+})
+
+function HeaderMenu() {
+  const { loginUser, loginServer, logout, setLoginServer } = useTailscale(
+    menuSelector,
+    shallow,
+  )
+
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [debugMenuOpen, setDebugMenuOpen] = useState(false)
+  const [confirmLogoutAction, setConfirmLogoutAction] =
+    useState<ConfirmLogoutAction>("none")
+
+  const handleConfirmLogout = useCallback(() => {
+    if (confirmLogoutAction === "logout") {
+      logout()
+    }
+    setConfirmLogoutAction("none")
+  }, [confirmLogoutAction, logout])
+
+  const handleLoginServerChange = useCallback(
+    (value: string) => {
+      console.log("Changing login server to", value)
+      if (value === "default") {
+        setLoginServer(undefined)
+      } else {
+        setLoginServer(value)
+      }
+    },
+    [setLoginServer],
+  )
+
+  useEffect(() => {
+    // Show a hidden debug menu when the option key is pressed on macOS and
+    // Linux, and when the shift key is pressed on Windows.
+
+    const isDebugKeyDown = (e: KeyboardEvent) =>
+      isWindows() ? e.shiftKey : e.altKey
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (isDebugKeyDown(e)) {
+        setDebugMenuOpen(true)
+      }
+    }
+    function handleKeyUp(e: KeyboardEvent) {
+      if (!isDebugKeyDown(e)) {
+        setDebugMenuOpen(false)
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    window.addEventListener("keyup", handleKeyUp)
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown)
+      window.removeEventListener("keyup", handleKeyUp)
+    }
+  }, [menuOpen])
+
+  return (
+    <>
+      <Dialog
+        open={confirmLogoutAction !== "none"}
+        onOpenChange={(open) =>
+          open ? undefined : setConfirmLogoutAction("none")
+        }
+        onConfirm={handleConfirmLogout}
+        title="Log out?"
+        action="Log out"
+        destructive
+      >
+        <p>
+          Logging out of Tailscale will disconnect all exposed ports. Any
+          members of your Tailscale network using these Tailscale URLs will no
+          longer be able to access your containers.
+        </p>
+      </Dialog>
+      <DropdownMenu
+        open={menuOpen}
+        onOpenChange={setMenuOpen}
+        asChild
+        align="end"
+        trigger={
+          <button className="-ml-3 px-3 py-2 group rounded-lg flex items-center overflow-hidden transition focus:outline-none hover:bg-[rgba(31,41,55,0.05)] dark:hover:bg-[rgba(255,255,255,0.05)]  focus-visible:bg-[rgba(31,41,55,0.05)] dark:focus-visible:bg-[rgba(255,255,255,0.05)]">
+            <Avatar
+              name={loginUser?.displayName || "Unknown"}
+              src={loginUser?.profilePicUrl}
+              className="w-6 h-6"
+            />
+            <Icon
+              className="ml-2 text-gray-500 group-hover:text-gray-400 group-focus:text-gray-400 transition-colors"
+              name="chevron-down"
+              size="16"
+            />
+          </button>
+        }
+      >
+        <DropdownMenu.Group>
+          <p className="font-medium min-w-[12rem]">{loginUser?.displayName}</p>
+          <p className="opacity-80">{loginUser?.loginName}</p>
+        </DropdownMenu.Group>
+        <DropdownMenu.Separator />
+        <DropdownMenu.Link href="https://tailscale.com/download">
+          Tailscale docs
+        </DropdownMenu.Link>
+        {loginUser?.isAdmin && (
+          <DropdownMenu.Link href="https://login.tailscale.com/admin">
+            Admin console
+          </DropdownMenu.Link>
+        )}
+        <DropdownMenu.Link href="https://tailscale.com/download">
+          Download Tailscale
+        </DropdownMenu.Link>
+        {debugMenuOpen && (
+          <>
+            <DropdownMenu.Separator />
+            <DropdownMenu.Label>Control Server</DropdownMenu.Label>
+            <DropdownMenu.RadioGroup
+              value={loginServer === undefined ? "default" : loginServer}
+              onValueChange={handleLoginServerChange}
+            >
+              <DropdownMenu.RadioItem value="default">
+                <DropdownMenu.ItemIndicator>
+                  <Icon name="check" size="14" />
+                </DropdownMenu.ItemIndicator>
+                Default
+              </DropdownMenu.RadioItem>
+              <DropdownMenu.RadioItem value="http://localhost:31544">
+                <DropdownMenu.ItemIndicator>
+                  <Icon name="check" size="14" />
+                </DropdownMenu.ItemIndicator>
+                localhost:31544
+              </DropdownMenu.RadioItem>
+            </DropdownMenu.RadioGroup>
+          </>
+        )}
+        <DropdownMenu.Separator />
+        <DropdownMenu.Item onSelect={() => setConfirmLogoutAction("logout")}>
+          Log out
+        </DropdownMenu.Item>
+      </DropdownMenu>
+    </>
   )
 }
 

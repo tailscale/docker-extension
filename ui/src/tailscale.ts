@@ -1,6 +1,6 @@
 import create from "zustand"
 import shallowCompare from "zustand/shallow"
-import { isMacOS, isWindows, openBrowser } from "src/utils"
+import { isMacOS, isWindows, openBrowser, timeout } from "src/utils"
 
 // BackendState
 // Keep in sync with https://github.com/tailscale/tailscale/blob/main/ipn/backend.go
@@ -34,6 +34,8 @@ export type State = {
   hostStatus: HostStatus
   tailscaleIPs: string[]
 
+  loginServer?: string
+
   /**
    * loginInfo is an object with details that allow a user to log in.
    */
@@ -47,6 +49,7 @@ export type State = {
   connect: () => Promise<void>
   disconnect: () => Promise<void>
   switchAccount: () => Promise<void>
+  setLoginServer: (loginServer: string | undefined) => Promise<void>
   logout: () => Promise<void>
 
   /**
@@ -78,6 +81,8 @@ const useTailscale = create<State>((set, get) => ({
   hostname: "",
   hostStatus: { status: "unknown", loginName: "" },
   tailscaleIPs: [],
+  loginServer:
+    window.localStorage.getItem("tailscale/loginServer") || undefined,
   loginInfo: undefined,
   loginUser: undefined,
 
@@ -115,18 +120,28 @@ const useTailscale = create<State>((set, get) => ({
     }
     throw new Error("No login URL")
   },
+  setLoginServer: async (loginServer: string | undefined) => {
+    if (loginServer) {
+      window.localStorage.setItem("tailscale/loginServer", loginServer)
+    } else {
+      window.localStorage.removeItem("tailscale/loginServer")
+    }
+    set({ loginServer })
+  },
   fetchLoginInfo: async () => {
     if (get().loginInfo) {
       // If we already have loginInfo, don't overwrite it.
       return
     }
     try {
-      let hostname = get().hostname
+      let { hostname, loginServer } = get()
       if (hostname === "") {
         await get().fetchHostname()
-        hostname = get().hostname
+        const data = get()
+        hostname = data.hostname
+        loginServer = data.loginServer
       }
-      const info = await getLoginInfo(hostname)
+      const info = await getLoginInfo(hostname, loginServer)
       const loginInfo =
         typeof info.AuthURL === "string" && typeof info.QR === "string"
           ? {
@@ -271,9 +286,20 @@ async function getTailscaleStatus(): Promise<StatusResponse> {
   return JSON.parse(status.stdout)
 }
 
-async function runTailscaleCommand(command: string): Promise<CommandOutput> {
-  const resp = await window.ddClient.backend.execInVMExtension(
-    `/app/tailscale ${command}`,
+async function runTailscaleCommand(
+  command: string,
+  options: { backgroundOutput?: boolean; timeout?: number } = {},
+): Promise<CommandOutput> {
+  const cmd = [
+    options?.backgroundOutput ? "/app/background-output.sh" : "",
+    `/app/tailscale`,
+    command,
+  ]
+    .filter(Boolean)
+    .join(" ")
+  const resp = await timeout(
+    window.ddClient.backend.execInVMExtension(cmd),
+    options?.timeout || 10000,
   )
   return resp
 }
@@ -288,12 +314,21 @@ type TailscaleUpResponse = {
 /**
  * getLoginInfo fetches the current login state from Tailscale.
  */
-async function getLoginInfo(hostname: string): Promise<TailscaleUpResponse> {
+async function getLoginInfo(
+  hostname: string,
+  loginServer?: string,
+): Promise<TailscaleUpResponse> {
   // We use `--force-reauth` because we want to provide users the option to
   // change their account. If we call `up` without `--force-reauth`, it just
   // tells us that it's already running.
-  const command = `/app/background-output.sh /app/tailscale up --hostname=${hostname}-docker-desktop --accept-dns=false --json --reset --force-reauth`
-  const resp = await window.ddClient.backend.execInVMExtension(command)
+  const cmd = [
+    `up --accept-dns=false --json --reset`,
+    loginServer ? `--login-server=${loginServer}` : "",
+    `--hostname=${hostname}-docker-desktop`,
+  ]
+    .filter(Boolean)
+    .join(" ")
+  const resp = await runTailscaleCommand(cmd, { backgroundOutput: true })
   let info = JSON.parse(resp.stdout)
   if (typeof info.AuthURL === "string") {
     // Add referral partner info to the URL

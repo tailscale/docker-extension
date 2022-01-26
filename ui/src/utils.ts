@@ -1,4 +1,21 @@
 /**
+ * timeout allows setting a max deadline for a promise to be executed.
+ */
+export function timeout<T>(task: Promise<T>, timeout: number) {
+  let timer: number
+  return Promise.race([
+    task,
+    new Promise(
+      (_, reject) =>
+        (timer = window.setTimeout(
+          () => reject(new Error("Exceeded timeout")),
+          timeout,
+        )),
+    ),
+  ]).finally(() => window.clearTimeout(timer)) as Promise<T>
+}
+
+/**
  * openBrowser opens a URL in the host system's browser
  */
 export async function openBrowser(url: string) {
