@@ -70,51 +70,76 @@ export default function ContainerView() {
           longer be able to access your containers.
         </p>
       </Dialog>
-      <header className="flex items-center justify-between py-6 px-2">
-        <div className="flex">
-          <div className="flex items-center space-x-3">
-            <DropdownMenu
-              asChild
-              align="start"
-              trigger={
-                <button className="-ml-3 px-3 py-2 rounded-lg flex items-center overflow-hidden transition focus:outline-none hover:bg-[rgba(31,41,55,0.05)] dark:hover:bg-[rgba(255,255,255,0.05)]  focus-visible:bg-[rgba(31,41,55,0.05)] dark:focus-visible:bg-[rgba(255,255,255,0.05)]">
-                  <Avatar
-                    name={loginUser?.displayName || "Unknown"}
-                    src={loginUser?.profilePicUrl}
-                    className="w-6 h-6"
-                  />
-                  <div className="font-medium ml-2">{loginUser?.loginName}</div>
-                </button>
-              }
-            >
-              <DropdownMenu.Link href="https://tailscale.com/download">
-                Tailscale Docs
-              </DropdownMenu.Link>
-              {loginUser?.isAdmin && (
-                <DropdownMenu.Link href="https://login.tailscale.com/admin">
-                  Admin console
-                </DropdownMenu.Link>
-              )}
-              <DropdownMenu.Link href="https://tailscale.com/download">
-                Download Tailscale
-              </DropdownMenu.Link>
-              <DropdownMenu.Separator />
-              <DropdownMenu.Item
-                onSelect={() => setConfirmLogoutAction("logout")}
-              >
-                Log out
-              </DropdownMenu.Item>
-            </DropdownMenu>
+      <header className="flex items-center justify-between py-5">
+        <div>
+          <div className="font-semibold text-xl">Tailscale</div>
+          <div className="flex items-center text-gray-400">
+            <span className="mr-2">
+              {backendState === "Stopped" ? "Signed in to" : "Connected to"}{" "}
+              {loginUser?.tailnetName}
+            </span>
+            <Tooltip content="This is your tailnet name. Other members of your tailnet can connect to your public container ports.">
+              <Icon className="text-gray-500" name="info" size="13" />
+            </Tooltip>
           </div>
         </div>
-        <div className="ml-auto">
+        <div className="flex ml-auto space-x-3">
           {backendState === "Stopped" ? (
-            <Button loading={connecting} onClick={handleConnectClick}>
+            <Button
+              variant="minimal"
+              loading={connecting}
+              onClick={handleConnectClick}
+            >
               Connect
             </Button>
           ) : (
-            <Button onClick={disconnect}>Disconnect</Button>
+            <Button variant="minimal" onClick={disconnect}>
+              Disconnect
+            </Button>
           )}
+          <DropdownMenu
+            asChild
+            align="end"
+            trigger={
+              <button className="-ml-3 px-3 py-2 group rounded-lg flex items-center overflow-hidden transition focus:outline-none hover:bg-[rgba(31,41,55,0.05)] dark:hover:bg-[rgba(255,255,255,0.05)]  focus-visible:bg-[rgba(31,41,55,0.05)] dark:focus-visible:bg-[rgba(255,255,255,0.05)]">
+                <Avatar
+                  name={loginUser?.displayName || "Unknown"}
+                  src={loginUser?.profilePicUrl}
+                  className="w-6 h-6"
+                />
+                <Icon
+                  className="ml-2 text-gray-500 group-hover:text-gray-400 group-focus:text-gray-400 transition-colors"
+                  name="chevron-down"
+                  size="16"
+                />
+              </button>
+            }
+          >
+            <DropdownMenu.Group>
+              <p className="font-medium min-w-[12rem]">
+                {loginUser?.displayName}
+              </p>
+              <p className="opacity-80">{loginUser?.loginName}</p>
+            </DropdownMenu.Group>
+            <DropdownMenu.Separator />
+            <DropdownMenu.Link href="https://tailscale.com/download">
+              Tailscale docs
+            </DropdownMenu.Link>
+            {loginUser?.isAdmin && (
+              <DropdownMenu.Link href="https://login.tailscale.com/admin">
+                Admin console
+              </DropdownMenu.Link>
+            )}
+            <DropdownMenu.Link href="https://tailscale.com/download">
+              Download Tailscale
+            </DropdownMenu.Link>
+            <DropdownMenu.Separator />
+            <DropdownMenu.Item
+              onSelect={() => setConfirmLogoutAction("logout")}
+            >
+              Log out
+            </DropdownMenu.Item>
+          </DropdownMenu>
         </div>
       </header>
       {backendState === "Stopped" ? (
@@ -206,7 +231,8 @@ function ContainerRow(props: { container: Container; tailscaleIP: string }) {
       <td className={cx(tableCellClass, "flex items-center")}>
         <Icon
           className={cx("mr-3", {
-            "text-green-300": container.State === "running",
+            "text-emerald-400 dark:text-green-300":
+              container.State === "running",
             "text-gray-600": container.State !== "running",
           })}
           name="container"
@@ -217,15 +243,21 @@ function ContainerRow(props: { container: Container; tailscaleIP: string }) {
       <td className={tableCellClass}>
         <Tooltip
           asChild
-          content={
-            <span>{copied ? <>✓ Copied!</> : "Copy URL to clipboard"}</span>
-          }
+          content={<span>{copied ? "Copied!" : "Copy URL to clipboard"}</span>}
           closeOnClick={false}
           open={showTooltip}
           onOpenChange={setShowTooltip}
         >
-          <button className={tableButtonClass} onClick={handleCopyClick}>
+          <button
+            className={cx(tableButtonClass, "flex items-center")}
+            onClick={handleCopyClick}
+          >
             {tailscaleIPPort}
+            <Icon
+              className="ml-1.5 text-gray-400"
+              name={copied ? "check" : "clipboard"}
+              size="14"
+            />
           </button>
         </Tooltip>
       </td>
@@ -246,7 +278,7 @@ function ContainerRow(props: { container: Container; tailscaleIP: string }) {
 const borderColor = "border-gray-200 dark:border-[rgba(255,255,255,0.09)]"
 const tablePadding = "px-2 py-4"
 const tableHeaderClass = cx(
-  "uppercase tracking-wider text-gray-700 dark:text-gray-200 text-xs border-b",
+  "uppercase tracking-wider text-gray-700 dark:text-gray-200 text-xs border-b select-none",
   tablePadding,
   borderColor,
 )

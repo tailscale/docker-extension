@@ -125,10 +125,13 @@ function DropdownMenuLink(props: DropdownMenuLinkProps) {
   }, [href])
 
   // handleClick handles when users click on the link.
-  const handleClick = useCallback((e: React.MouseEvent) => {
-    e.preventDefault()
-    handleSelect()
-  }, [handleSelect])
+  const handleClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault()
+      handleSelect()
+    },
+    [handleSelect],
+  )
 
   return (
     <MenuPrimitive.Item
@@ -166,7 +169,7 @@ function DropdownSeparator(props: DropdownSeparatorProps) {
   return (
     <MenuPrimitive.Separator
       className={cx(
-        "my-1 border-b border-gray-200 dark:border-slate-600",
+        "my-1 border-b border-gray-200 dark:border-white dark:opacity-10",
         className,
       )}
       {...rest}

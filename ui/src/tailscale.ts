@@ -17,6 +17,7 @@ type LoginUser = {
   loginName: string
   displayName: string
   profilePicUrl: string
+  tailnetName: string
   isAdmin?: boolean
 }
 
@@ -237,6 +238,7 @@ function getLoginUserFromStatus(status: StatusResponse): LoginUser | undefined {
         loginName: backendUser.LoginName,
         displayName: backendUser.DisplayName,
         profilePicUrl: backendUser.ProfilePicURL,
+        tailnetName: getTailnetName(backendUser.LoginName),
       }
     : undefined
   if (loginUser) {
@@ -247,6 +249,11 @@ function getLoginUserFromStatus(status: StatusResponse): LoginUser | undefined {
     }
   }
   return loginUser
+}
+
+function getTailnetName(loginName: string) {
+  const [, suffix] = loginName.split("@")
+  return suffix === "gmail.com" ? loginName : suffix
 }
 
 async function getTailscaleStatus(): Promise<StatusResponse> {

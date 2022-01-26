@@ -36,7 +36,7 @@ export default function Tooltip(props: Props) {
         {children}
       </Primitive.Trigger>
       <Primitive.Content
-        className="tooltip px-2 py-1 bg-[#5e6971] text-white rounded-md"
+        className="tooltip px-2 py-1 bg-[#5e6971] text-white text-center rounded-md max-w-xs"
         sideOffset={sideOffset}
       >
         {content}

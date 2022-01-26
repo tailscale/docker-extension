@@ -19,7 +19,7 @@ const Button = React.forwardRef(
         {...rest}
         className={cx(
           className,
-          "flex items-center text-center relative whitespace-nowrap focus:ring focus:outline-none rounded-md font-semibold transition",
+          "flex items-center text-center relative whitespace-nowrap border border-transparent focus:ring focus:outline-none rounded-md font-semibold transition select-none",
           {
             "px-3 py-1": size === "sm",
             "px-3 py-2": size === "md",
@@ -34,6 +34,10 @@ const Button = React.forwardRef(
               disabled && variant === "secondary",
             "bg-gray-200 hover:bg-gray-300 text-gray-700 dark:text-white dark:bg-docker-dark-gray-500 dark:hover:bg-docker-dark-gray-400":
               !disabled && variant === "secondary",
+            " text-gray-500 dark:text-gray-300 ":
+              disabled && variant === "minimal",
+            " text-gray-700 border-gray-700 dark:text-white hover:bg-faded-gray-5 hover:border-faded-gray-5 dark:hover:bg-faded-white-5 dark:hover:border-faded-white-5  focus-visible:bg-faded-gray-5 dark:focus-visible:bg-faded-white-5 focus:ring-0":
+              !disabled && variant === "minimal",
             "text-transparent dark:text-transparent": loading,
           },
         )}
