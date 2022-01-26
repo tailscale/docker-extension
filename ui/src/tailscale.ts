@@ -204,6 +204,7 @@ type StatusResponse = {
   BackendState: BackendState
   Self: StatusSelf
   User: Record<string, TailscaleUser> | null
+  TailnetName?: string // Only available in versions of Tailscale > 1.20.3
 }
 
 type TailscaleUser = {
@@ -238,10 +239,19 @@ function getLoginUserFromStatus(status: StatusResponse): LoginUser | undefined {
         loginName: backendUser.LoginName,
         displayName: backendUser.DisplayName,
         profilePicUrl: backendUser.ProfilePicURL,
-        tailnetName: getTailnetName(backendUser.LoginName),
+        tailnetName: "",
       }
     : undefined
   if (loginUser) {
+    if (
+      typeof status.TailnetName === "string" &&
+      status.TailnetName.length > 0
+    ) {
+      loginUser.tailnetName = status.TailnetName
+    } else {
+      loginUser.tailnetName = getTailnetName(loginUser.loginName)
+    }
+
     if (
       status.Self.Capabilities?.includes("https://tailscale.com/cap/is-admin")
     ) {
