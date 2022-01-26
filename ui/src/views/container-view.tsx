@@ -202,9 +202,10 @@ function ContainerTable() {
           </tbody>
         </table>
       ) : (
-        <div className="text-center">
-          <p className="text-lg">
-            No containers found. Go to the Containers tab to get started.
+        <div className="text-center py-12">
+          <p className="text-xl font-medium mb-1">No containers are running.</p>
+          <p className="text-gray-400">
+            Go to the Containers tab to get started.
           </p>
         </div>
       )}
