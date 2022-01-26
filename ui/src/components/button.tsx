@@ -34,9 +34,9 @@ const Button = React.forwardRef(
               disabled && variant === "secondary",
             "bg-gray-200 hover:bg-gray-300 text-gray-700 dark:text-white dark:bg-docker-dark-gray-500 dark:hover:bg-docker-dark-gray-400":
               !disabled && variant === "secondary",
-            " text-gray-500 dark:text-gray-300 ":
+            "text-gray-500 dark:text-gray-300 ":
               disabled && variant === "minimal",
-            " text-gray-700 border-gray-700 dark:text-white hover:bg-faded-gray-5 hover:border-faded-gray-5 dark:hover:bg-faded-white-5 dark:hover:border-faded-white-5  focus-visible:bg-faded-gray-5 dark:focus-visible:bg-faded-white-5 focus:ring-0":
+            "text-gray-700 border-gray-300 dark:border-gray-700 dark:text-white hover:bg-faded-gray-5 hover:border-faded-gray-5 dark:hover:bg-faded-white-5 dark:hover:border-faded-white-5  focus-visible:bg-faded-gray-5 dark:focus-visible:bg-faded-white-5 focus:ring-0":
               !disabled && variant === "minimal",
             "text-transparent dark:text-transparent": loading,
           },
