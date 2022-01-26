@@ -1,6 +1,6 @@
 import create from "zustand"
 import shallowCompare from "zustand/shallow"
-import { isMacOS, isWindows, openBrowser } from "src/utils"
+import { isMacOS, isSharedDomain, isWindows, openBrowser } from "src/utils"
 
 // BackendState
 // Keep in sync with https://github.com/tailscale/tailscale/blob/main/ipn/backend.go
@@ -263,7 +263,7 @@ function getLoginUserFromStatus(status: StatusResponse): LoginUser | undefined {
 
 function getTailnetName(loginName: string) {
   const [, suffix] = loginName.split("@")
-  return suffix === "gmail.com" ? loginName : suffix
+  return isSharedDomain(suffix) ? loginName : suffix
 }
 
 async function getTailscaleStatus(): Promise<StatusResponse> {
