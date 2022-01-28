@@ -138,7 +138,7 @@ export default function OnboardingView() {
         <div className="ml-auto">
           <Button
             variant="primary"
-            onClick={() => openBrowser("https://tailscale.com/kb/")}
+            onClick={() => openBrowser("https://tailscale.com/kb/1184/docker-desktop/")}
           >
             Read docs
           </Button>
