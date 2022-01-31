@@ -28,9 +28,18 @@ prepare-buildx: ## Create buildx builder for multi-arch build, if not exists
 
 extension: ## Build service image to be deployed as a desktop extension
 	docker build --tag=$(LOCAL_IMAGE_NAME) .
+.PHONY: extension
+
+install-extension: extension ## Install extension image Docker desktop
+	docker extension update $(LOCAL_IMAGE_NAME)
+
+dev-extension: install-extension
+	@docker extension dev ui-source $(LOCAL_IMAGE_NAME) http://localhost:3011
+	@PORT=3011 yarn --cwd ui start
 
 push-extension: ## Build & Upload extension image to hub. Do not push if tag already exists: make push-extension tag=0.1
-	docker pull $(REMOTE_IMAGE_NAME):$(tag) && echo "Failure: Tag already exists" || docker buildx build --push --builder=$(BUILDER) --platform=linux/amd64,linux/arm64 --build-arg TAG=${tag)} --tag=$(REMOTE_IMAGE_NAME):$(tag) .
+	docker pull $(REMOTE_IMAGE_NAME):$(tag) && echo "Failure: Tag already exists" && exit 1
+	docker buildx build --push --builder=$(BUILDER) --platform=linux/arm64,linux/arm,linux/amd64 --build-arg TAG=${tag)} --tag=$(REMOTE_IMAGE_NAME):$(tag) .
 
 help: ## Show this help
 	@echo Please specify a build target. The choices are:
