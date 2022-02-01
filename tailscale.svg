@@ -1,11 +1,12 @@
 <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-<circle cx="32.25" cy="60" r="9.25" fill="white"/>
-<circle cx="60" cy="60" r="9.25" fill="white"/>
-<circle opacity="0.2" cx="32.25" cy="87.75" r="9.25" fill="white"/>
-<circle opacity="0.2" cx="87.75" cy="87.75" r="9.25" fill="white"/>
-<circle cx="60" cy="87.75" r="9.25" fill="white"/>
-<circle cx="87.75" cy="60" r="9.25" fill="white"/>
-<circle opacity="0.2" cx="32.25" cy="32.25" r="9.25" fill="white"/>
-<circle opacity="0.2" cx="60" cy="32.25" r="9.25" fill="white"/>
-<circle opacity="0.2" cx="87.75" cy="32.25" r="9.25" fill="white"/>
+<rect x="5" y="5" width="110" height="110" rx="27.5" fill="#1C1816"/>
+<circle cx="35.2499" cy="60" r="8.25002" fill="#FFFDFA"/>
+<circle cx="59.9999" cy="60" r="8.25002" fill="#FFFDFA"/>
+<circle cx="35.2499" cy="84.7501" r="8.25002" fill="#6A6565"/>
+<circle cx="84.75" cy="84.7501" r="8.25002" fill="#6A6565"/>
+<circle cx="59.9999" cy="84.7501" r="8.25002" fill="#FFFDFA"/>
+<circle cx="84.75" cy="60" r="8.25002" fill="#FFFDFA"/>
+<circle cx="35.2499" cy="35.2499" r="8.25002" fill="#6A6565"/>
+<circle cx="59.9999" cy="35.2499" r="8.25002" fill="#6A6565"/>
+<circle cx="84.75" cy="35.2499" r="8.25002" fill="#6A6565"/>
 </svg>
