@@ -314,7 +314,8 @@ docomo.ne.jp
 ozzio.jp
 posteo.net
 sbcglobal.net
-hotmail.no`.split("\n")
+hotmail.no
+github`.split("\n")
 
 export function isSharedDomain(domain: string) {
   return SHARED_DOMAINS.includes(domain)
