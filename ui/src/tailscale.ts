@@ -174,7 +174,6 @@ const useTailscale = create<State>((set, get) => ({
     }
   },
   fetchHostStatus: async () => {
-    // TODO: support Windows too.
     const hostStatus: HostStatus = { ...get().hostStatus }
     const installed = await isTailscaleOnHost()
 
@@ -309,7 +308,10 @@ export type HostStatus = {
   loginName: string
 }
 
-const windowsTailscalePath = "C:\\Program Files\\Tailscale\\tailscale.exe"
+const windowsTailscalePath = async () => {
+  const output = await window.ddClient.execHostCmd("where tailscale-ipn.exe")
+  return output.stdout.trim()
+}
 const macOSTailscalePath =
   "/Applications/Tailscale.app/Contents/MacOS/tailscale"
 const linuxTailscalePath = "/usr/bin/env tailscale"
@@ -317,10 +319,9 @@ const linuxTailscalePath = "/usr/bin/env tailscale"
 async function isTailscaleOnHost(): Promise<boolean> {
   try {
     if (isWindows()) {
-      const output = await window.ddClient.execHostCmd(
-        `Test-Path -Path '${windowsTailscalePath}' -PathType Leaf`,
-      )
-      return output.stdout.trim().toLowerCase() === "true"
+      // This command will throw if Tailscale doesn't exist.
+      await windowsTailscalePath()
+      return true
     }
     await window.ddClient.execHostCmd(
       "/usr/bin/env test -d /Applications/Tailscale.app",
@@ -335,7 +336,7 @@ async function isTailscaleOnHost(): Promise<boolean> {
 
 async function tailscaleOnHostStatus() {
   const hostPath = isWindows()
-    ? windowsTailscalePath
+    ? await windowsTailscalePath()
     : isMacOS()
     ? macOSTailscalePath
     : linuxTailscalePath
@@ -349,8 +350,8 @@ async function tailscaleOnHostStatus() {
  */
 export async function openTailscaleOnHost(): Promise<void> {
   if (isWindows()) {
-    // TODO: support older paths for the Tailscale app.
-    await window.ddClient.execHostCmd(`start ${windowsTailscalePath}`)
+    const path = await windowsTailscalePath()
+    await window.ddClient.execHostCmd(`start ${path}`)
     return
   }
   if (isMacOS()) {
