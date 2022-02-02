@@ -1,9 +1,10 @@
-import React, { Suspense, useEffect } from "react"
+import { Suspense, useEffect } from "react"
 import Tooltip from "src/components/tooltip"
 import useTailscale, { State, BackendState, shallow } from "src/tailscale"
 import useInterval from "src/hooks/interval"
 import ContainerView from "src/views/container-view"
 import LoadingView from "src/views/loading-view"
+import NeedsAuthView from "src/views/needs-auth-view"
 import OnboardingView from "src/views/onboarding-view"
 
 export default function App() {
@@ -47,6 +48,9 @@ function Router() {
   if (!initialized) {
     return <LoadingView />
   }
+  if (backendState === "NeedsMachineAuth") {
+    return <NeedsAuthView />
+  }
   if (showOnboarding(backendState, loginUser)) {
     return <OnboardingView />
   }
@@ -54,11 +58,7 @@ function Router() {
 }
 
 const showOnboarding = (state: BackendState, user?: object) => {
-  if (
-    state === "NoState" ||
-    state === "NeedsLogin" ||
-    state === "NeedsMachineAuth"
-  ) {
+  if (state === "NoState" || state === "NeedsLogin") {
     return true
   }
   if (state === "Stopped" && user === undefined) {

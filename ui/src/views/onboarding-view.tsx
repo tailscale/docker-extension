@@ -10,7 +10,6 @@ import LoadingView from "src/views/loading-view"
 
 const selector = (state: State) => ({
   hostname: state.hostname,
-  backendState: state.backendState,
   loginInfo: state.loginInfo,
   fetchLoginInfo: state.fetchLoginInfo,
   fetchStatus: state.fetchStatus,
@@ -21,12 +20,19 @@ const selector = (state: State) => ({
  * It explains Tailscale and asks them to sign in or create an account.
  */
 export default function OnboardingView() {
-  const { backendState, loginInfo, fetchLoginInfo, fetchStatus } = useTailscale(
+  const { fetchStatus, loginInfo, fetchLoginInfo } = useTailscale(
     selector,
     shallow,
   )
+
   const [showDialog, setShowDialog] = useState(false)
   const [pendingButton, setPendingButton] = useState("none")
+
+  useEffect(() => {
+    if (loginInfo === undefined) {
+      fetchLoginInfo()
+    }
+  }, [fetchLoginInfo, loginInfo])
 
   const handleLogInClick = useCallback(async () => {
     if (!loginInfo) {
@@ -45,12 +51,6 @@ export default function OnboardingView() {
   }, [loginInfo])
 
   useEffect(() => {
-    if (loginInfo === undefined) {
-      fetchLoginInfo()
-    }
-  }, [fetchLoginInfo, loginInfo])
-
-  useEffect(() => {
     if (loginInfo !== undefined && pendingButton !== "none") {
       if (pendingButton === "browser") {
         handleLogInClick()
@@ -62,10 +62,6 @@ export default function OnboardingView() {
   }, [pendingButton, handleLogInClick, handleLogInQRClick, loginInfo])
 
   useInterval(fetchStatus, 750)
-
-  if (backendState === "NeedsMachineAuth") {
-    return <NeedsAuthView />
-  }
 
   return (
     <div>
@@ -145,61 +141,6 @@ export default function OnboardingView() {
             Read docs
           </Button>
         </div>
-      </div>
-    </div>
-  )
-}
-
-const needsAuthSelector = (state: State) => ({
-  isAdmin: state.loginUser?.isAdmin || false,
-  hostname: state.hostname,
-  tailscaleIPs: state.tailscaleIPs,
-  logout: state.logout,
-})
-
-function NeedsAuthView() {
-  const { isAdmin, hostname, tailscaleIPs, logout } = useTailscale(
-    needsAuthSelector,
-    shallow,
-  )
-
-  const authorizeIP = tailscaleIPs.find((ip) => ip.startsWith("100."))
-  const authorizeUrl = authorizeIP
-    ? `https://login.tailscale.com/admin/machines/${authorizeIP}`
-    : `https://login.tailscale.com/admin/machines`
-
-  return (
-    <div className="py-24 text-center">
-      <div className="flex flex-col items-center mx-auto max-w-2xl">
-        <div className="mb-16">
-          <LoadingView />
-        </div>
-        <h2 className="text-xl font-semibold mb-6">
-          Waiting for an admin to approve this device…
-        </h2>
-        {isAdmin ? (
-          <p className="text-base">
-            You can approve this device from{" "}
-            <Link
-              className="underline underline-offset-1 decoration-blue-400 text-blue-400"
-              href={authorizeUrl}
-            >
-              Tailscale’s admin console
-            </Link>
-            .<br />
-            The extension will automatically update when the device is approved.
-          </p>
-        ) : (
-          <p className="text-base">
-            Ask the admin of your Tailscale network to approve “{hostname}
-            -docker-desktop”
-            <br />
-            This page will automatically update when the device is approved.
-          </p>
-        )}
-        <Button className="mt-16" onClick={logout}>
-          Log in to a different account
-        </Button>
       </div>
     </div>
   )
