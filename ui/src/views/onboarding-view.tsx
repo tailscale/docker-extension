@@ -2,11 +2,9 @@ import { useCallback, useEffect, useState } from "react"
 import { ReactComponent as TailscaleLogo } from "src/assets/tailscale-logo.svg"
 import Dialog from "src/components/dialog"
 import Button from "src/components/button"
-import Link from "src/components/link"
 import useInterval from "src/hooks/interval"
 import useTailscale, { State, shallow } from "src/tailscale"
 import { openBrowser } from "src/utils"
-import LoadingView from "src/views/loading-view"
 
 const selector = (state: State) => ({
   hostname: state.hostname,
