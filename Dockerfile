@@ -20,19 +20,18 @@ RUN --mount=type=cache,target=/usr/local/share/.cache/yarn-${TARGETARCH} yarn bu
 
 FROM debian:bullseye-slim
 LABEL org.opencontainers.image.title="Tailscale" \
-    com.docker.desktop.extension.icon="https://f-droid.org/repo/icons-640/com.tailscale.ipn.78.png" \
+    com.docker.desktop.extension.icon="https://tailscale.com/files/tailscale-docker-icon.svg" \
     org.opencontainers.image.description="Connect your Docker containers to your secure private network." \
     org.opencontainers.image.authors="Tailscale Inc." \
     org.opencontainers.image.vendor="Tailscale Inc." \
-    com.docker.desktop.extension.api.version="1.0.0-beta.1" \
-    com.docker.desktop.plugin.api.version="1.0.0-beta.1"
+    com.docker.desktop.extension.api.version=">=0.1.0"
 RUN apt-get update \
     && apt-get install -y \
-        ca-certificates \
-        iptables \
-        iproute2 \
-        procps \
-        inotify-tools \
+    ca-certificates \
+    iptables \
+    iproute2 \
+    procps \
+    inotify-tools \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=tailscale /out/tailscale /app/tailscale
 COPY --from=tailscale /out/tailscaled /app/tailscaled
