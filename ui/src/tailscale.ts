@@ -153,16 +153,17 @@ const useTailscale = create<State>((set, get) => ({
   fetchStatus: async () => {
     try {
       // TODO: separate out container fetching and Tailscale status fetching.
-      const [status, containers] = await Promise.all([
+      const [statusResponse, containers] = await Promise.all([
         getTailscaleStatus(),
         window.ddClient.listContainers(),
       ])
+      const [status, rawStatus] = statusResponse
       set((state) => ({
         ...state,
         initialized: true,
         backendState: status.BackendState,
         tailscaleIPs: status.Self.TailscaleIPs,
-        loginUser: getLoginUserFromStatus(status),
+        loginUser: getLoginUserFromStatus(status, rawStatus),
         containers: containers
           // only show containers that expose a public port
           .filter((c) => c.Ports.some((p) => p.PublicPort))
@@ -189,7 +190,7 @@ const useTailscale = create<State>((set, get) => ({
       const status = await tailscaleOnHostStatus()
       hostStatus.status =
         status.BackendState === "Running" ? "running" : "installed"
-      hostStatus.loginName = getLoginUserFromStatus(status)?.loginName || ""
+      hostStatus.loginName = getLoginUserFromStatus(status, "")?.loginName || ""
     } catch (err) {
       set({ hostStatus })
       return
@@ -229,20 +230,35 @@ type StatusSelf = {
  * getLoginUserFromStatus extracts the current user details from the status
  * response, handling various empty cases.
  */
-function getLoginUserFromStatus(status: StatusResponse): LoginUser | undefined {
-  const backendUser =
-    status.User && status.Self.UserID !== 0
-      ? status.User[status.Self.UserID.toString()]
-      : undefined
-  const loginUser: LoginUser | undefined = backendUser
-    ? {
-        loginName: backendUser.LoginName,
-        displayName: backendUser.DisplayName,
-        profilePicUrl: backendUser.ProfilePicURL,
-        tailnetName: "",
-      }
-    : undefined
-  if (loginUser) {
+function getLoginUserFromStatus(
+  status: StatusResponse,
+  rawStatus: string,
+): LoginUser | undefined {
+  let backendUser: TailscaleUser | undefined = undefined
+  let loginUser: LoginUser | undefined = undefined
+
+  if (status.User && status.Self.UserID !== 0) {
+    // First, try to use the user ID from the status response.
+    backendUser = status.User[status.Self.UserID]
+  }
+  if (status.User && backendUser === undefined) {
+    // If the backendUser is missing, it may be because of a truncated numeric
+    // ID problem. Try to parse the status response to find the user ID and
+    // try again.
+    const backendUserID = getUserIDFromRawStatus(rawStatus)
+    if (backendUserID) {
+      backendUser = status.User[backendUserID]
+    }
+  }
+
+  if (backendUser) {
+    loginUser = {
+      loginName: backendUser.LoginName,
+      displayName: backendUser.DisplayName,
+      profilePicUrl: backendUser.ProfilePicURL,
+      tailnetName: "",
+    }
+
     if (
       typeof status.TailnetName === "string" &&
       status.TailnetName.length > 0
@@ -266,9 +282,25 @@ function getTailnetName(loginName: string) {
   return isSharedDomain(suffix) ? loginName : suffix
 }
 
-async function getTailscaleStatus(): Promise<StatusResponse> {
+/**
+ * getUserIDFromRawStatus extracts a string-based UserID from the raw text
+ * output of `tailscale status --json`.
+ *
+ * We need this because some UserIDs are larger integers than Javascript
+ * supports, so they get truncated, which results in failing to load the user
+ * information. By extracting this from the raw string output, Javascript never
+ * has the chance to truncate the ID value.
+ */
+function getUserIDFromRawStatus(rawStatus: string): string | undefined {
+  // While the output has multiple `"UserID"` lines, the `"Self"` block should
+  // always appear first.
+  const match = rawStatus.match(/"UserID":\s*(\d+)/)
+  return match ? match[1] : undefined
+}
+
+async function getTailscaleStatus(): Promise<[StatusResponse, string]> {
   const status = await runTailscaleCommand("status -json")
-  return JSON.parse(status.stdout)
+  return [JSON.parse(status.stdout), status.stdout]
 }
 
 async function runTailscaleCommand(command: string): Promise<CommandOutput> {
