@@ -97,14 +97,13 @@ const useTailscale = create<State>((set, get) => ({
     }
   },
   logout: async () => {
-    // Optimistic update, doesn't roll back if the action fails
+    await runTailscaleCommand(`logout`)
     set({
       backendState: "Stopped",
       loginInfo: undefined,
       loginUser: undefined,
       containers: [],
     })
-    await runTailscaleCommand(`logout`)
   },
   switchAccount: async () => {
     await get().fetchLoginInfo()
