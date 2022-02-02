@@ -187,10 +187,11 @@ const useTailscale = create<State>((set, get) => ({
     }
     hostStatus.status = "installed"
     try {
-      const status = await tailscaleOnHostStatus()
+      const [status, rawStatus] = await tailscaleOnHostStatus()
       hostStatus.status =
         status.BackendState === "Running" ? "running" : "installed"
-      hostStatus.loginName = getLoginUserFromStatus(status, "")?.loginName || ""
+      hostStatus.loginName =
+        getLoginUserFromStatus(status, rawStatus)?.loginName || ""
     } catch (err) {
       set({ hostStatus })
       return
@@ -372,7 +373,7 @@ async function tailscaleOnHostStatus() {
     ? macOSTailscalePath
     : linuxTailscalePath
   const output = await window.ddClient.execHostCmd(`${hostPath} status --json`)
-  return JSON.parse(output.stdout) as StatusResponse
+  return [JSON.parse(output.stdout) as StatusResponse, output.stdout] as const
 }
 
 /**
