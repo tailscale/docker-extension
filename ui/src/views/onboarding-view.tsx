@@ -138,7 +138,9 @@ export default function OnboardingView() {
         <div className="ml-auto">
           <Button
             variant="primary"
-            onClick={() => openBrowser("https://tailscale.com/kb/1184/docker-desktop/")}
+            onClick={() =>
+              openBrowser("https://tailscale.com/kb/1184/docker-desktop/")
+            }
           >
             Read docs
           </Button>
@@ -151,11 +153,20 @@ export default function OnboardingView() {
 const needsAuthSelector = (state: State) => ({
   isAdmin: state.loginUser?.isAdmin || false,
   hostname: state.hostname,
+  tailscaleIPs: state.tailscaleIPs,
   logout: state.logout,
 })
 
 function NeedsAuthView() {
-  const { isAdmin, hostname, logout } = useTailscale(needsAuthSelector, shallow)
+  const { isAdmin, hostname, tailscaleIPs, logout } = useTailscale(
+    needsAuthSelector,
+    shallow,
+  )
+
+  const authorizeIP = tailscaleIPs.find((ip) => ip.startsWith("100."))
+  const authorizeUrl = authorizeIP
+    ? `https://login.tailscale.com/admin/machines/${authorizeIP}`
+    : `https://login.tailscale.com/admin/machines`
 
   return (
     <div className="py-24 text-center">
@@ -171,7 +182,7 @@ function NeedsAuthView() {
             You can approve this device from{" "}
             <Link
               className="underline underline-offset-1 decoration-blue-400 text-blue-400"
-              href="https://login.tailscale.com/admin"
+              href={authorizeUrl}
             >
               Tailscale’s admin console
             </Link>
