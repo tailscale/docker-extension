@@ -23,46 +23,28 @@ Once you have all the prerequisite pieces installed, enable the extension beta.
 docker extension enable
 ```
 
-Next, build the extension Docker container…
+Next, build and install the extension Docker container:
 
 ```
-make extension
-```
-
-… and install it:
-
-```
-docker extension install <extension-id>
+make install-extension
 ```
 
 Navigate to Docker Desktop, and you should now see a new "Tailscale" section in the sidebar menu.
 
 ### Developing the extension backend
 
-Any changes to the extension metadata or backend will require you to rebuild then extension…
+Any changes to the extension metadata or backend will require you to rebuild the extension and install it. You can do both with:
 
 ```
-make extension
-```
-
-… and then reinstall it.
-
-```
-docker extension install <extension-id>
+make install-extension
 ```
 
 ### Developing the extension UI
 
 The extension UI is a React app that is statically bundled at build time. However, re-building the Docker container on each change is slow, so we can instead instruct the Docker Desktop app to use a local server to serve the UI instead.
 
-To start the local UI server, navigate to `ui` and run:
-
 ```
-yarn start
+make dev-extension
 ```
 
-This will spin up a local server on [localhost:3000](http://localhost:3000). Once running, instruct Docker Desktop to use that server as your extension UI with the command:
-
-```
-docker extension dev ui-source <extension-id> http://localhost:3000
-```
+This will spin up a local server on [localhost:3000](http://localhost:3000). Once running, it instructs Docker Desktop to use that server as your extension UI. Changes will be hot reloaded.
