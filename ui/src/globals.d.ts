@@ -30,6 +30,7 @@ interface Window {
     listImages: () => Promise<void> // TODO: figure out return value type
     execHostCmd: (command: string) => Promise<CommandOutput>
     toastError: (error: string) => void // TODO: figure out return value type
+    openExternal: (url: string) => Promise<void> // TODO: figure out return value type
     backend: {
       get: (socketName: string) => Promise<void> // TODO: figure out return value type
       execInVMExtension: (command: string) => Promise<CommandOutput>
