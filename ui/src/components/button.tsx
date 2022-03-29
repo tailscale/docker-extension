@@ -14,6 +14,9 @@ const Button = React.forwardRef(
   (props: Props, ref: React.Ref<HTMLButtonElement>) => {
     const { className, children, size, variant, loading, disabled, ...rest } =
       props
+
+    const isFilled = variant !== "secondary" && variant !== "minimal"
+
     return (
       <button
         {...rest}
@@ -32,11 +35,11 @@ const Button = React.forwardRef(
             "bg-red-500 text-white": disabled && variant === "danger",
             "bg-gray-200 text-gray-500 dark:text-gray-300 dark:bg-docker-dark-gray-500":
               disabled && variant === "secondary",
-            "bg-gray-200 hover:bg-gray-300 text-gray-700 dark:text-white dark:bg-docker-dark-gray-500 dark:hover:bg-docker-dark-gray-400":
+            "bg-gray-300/60 hover:bg-gray-300 text-gray-700 dark:text-white dark:bg-docker-dark-gray-500 dark:hover:bg-docker-dark-gray-400":
               !disabled && variant === "secondary",
             "text-gray-500 dark:text-gray-300 ":
               disabled && variant === "minimal",
-            "text-gray-700 border-gray-300 dark:border-gray-700 dark:text-white hover:bg-faded-gray-5 hover:border-faded-gray-5 dark:hover:bg-faded-white-5 dark:hover:border-faded-white-5  focus-visible:bg-faded-gray-5 dark:focus-visible:bg-faded-white-5 focus:ring-0":
+            "text-gray-700 border-faded-gray-25 dark:border-gray-700 dark:text-white hover:bg-faded-gray-5 hover:border-faded-gray-15 dark:hover:bg-faded-white-5 dark:hover:border-faded-white-5  focus-visible:bg-faded-gray-5 dark:focus-visible:bg-faded-white-5 focus:ring-0":
               !disabled && variant === "minimal",
             "text-transparent dark:text-transparent": loading,
           },
@@ -49,8 +52,8 @@ const Button = React.forwardRef(
             className={cx(
               "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
               {
-                "text-white": variant !== "secondary",
-                "text-gray-700 dark:text-white": variant === "secondary",
+                "text-white": isFilled,
+                "text-gray-700 dark:text-white": !isFilled,
               },
             )}
           />

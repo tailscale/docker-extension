@@ -73,7 +73,7 @@ export default function ContainerView() {
       <header className="flex items-center justify-between py-5">
         <div>
           <div className="font-semibold text-xl">Tailscale</div>
-          <div className="flex items-center text-gray-400">
+          <div className="flex items-center text-gray-500 dark:text-gray-400">
             <span className="mr-2">
               {backendState === "Stopped" ? "Signed in to" : "Connected to"}{" "}
               {loginUser?.tailnetName}
@@ -204,7 +204,7 @@ function ContainerTable() {
       ) : (
         <div className="text-center py-12">
           <p className="text-xl font-medium mb-1">No containers are running.</p>
-          <p className="text-gray-400">
+          <p className="text-gray-500 dark:text-gray-400">
             Go to the Containers tab to get started.
           </p>
         </div>
