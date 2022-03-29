@@ -122,7 +122,7 @@ export default function ContainerView() {
               <p className="opacity-80">{loginUser?.loginName}</p>
             </DropdownMenu.Group>
             <DropdownMenu.Separator />
-            <DropdownMenu.Link href="https://tailscale.com/download">
+            <DropdownMenu.Link href="https://tailscale.com/kb">
               Tailscale docs
             </DropdownMenu.Link>
             {loginUser?.isAdmin && (
