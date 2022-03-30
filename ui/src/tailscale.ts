@@ -341,8 +341,8 @@ export type HostStatus = {
 }
 
 const windowsTailscalePath = async () => {
-  const output = await window.ddClient.execHostCmd("where tailscale-ipn.exe")
-  return output.stdout.trim()
+  const output = await window.ddClient.execHostCmd("host-tailscale where")
+  return `"${output.stdout.trim()}"`
 }
 const macOSTailscalePath =
   "/Applications/Tailscale.app/Contents/MacOS/tailscale"
@@ -356,7 +356,7 @@ async function isTailscaleOnHost(): Promise<boolean> {
       return true
     }
     await window.ddClient.execHostCmd(
-      "/usr/bin/env test -d /Applications/Tailscale.app",
+      "host-tailscale present",
     )
     return true
   } catch (err) {
@@ -372,7 +372,7 @@ async function tailscaleOnHostStatus() {
     : isMacOS()
     ? macOSTailscalePath
     : linuxTailscalePath
-  const output = await window.ddClient.execHostCmd(`${hostPath} status --json`)
+  const output = await window.ddClient.execHostCmd(`host-tailscale status ${hostPath}`)
   return [JSON.parse(output.stdout) as StatusResponse, output.stdout] as const
 }
 
@@ -383,11 +383,12 @@ async function tailscaleOnHostStatus() {
 export async function openTailscaleOnHost(): Promise<void> {
   if (isWindows()) {
     const path = await windowsTailscalePath()
-    await window.ddClient.execHostCmd(`start ${path}`)
+    const tailscaleIpnExe = path.replace('tailscale.exe', 'tailscale-ipn.exe');
+    await window.ddClient.execHostCmd(`host-tailscale start ${tailscaleIpnExe}`)
     return
   }
   if (isMacOS()) {
-    await window.ddClient.execHostCmd("/usr/bin/env open -a 'Tailscale'")
+    await window.ddClient.execHostCmd("host-tailscale start")
     return
   }
   // TODO: support Linux. For now we just don't open anything.

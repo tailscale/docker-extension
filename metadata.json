@@ -19,11 +19,17 @@
         "darwin": [
           {
             "path": "/darwin/hostname"
+          },
+          {
+            "path": "/darwin/host-tailscale"
           }
         ],
         "windows": [
           {
             "path": "/windows/hostname.cmd"
+          },
+          {
+            "path": "/windows/host-tailscale.cmd"
           }
         ],
         "linux": [
