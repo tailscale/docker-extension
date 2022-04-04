@@ -43,7 +43,9 @@ COPY wait-for-exit.sh /app/wait-for-exit.sh
 COPY vm/docker-compose.yaml .
 COPY host/hostname darwin/hostname
 COPY host/hostname.cmd windows/hostname.cmd
+COPY host/hostname.sh linux/hostname.sh
 COPY host/host-tailscale darwin/host-tailscale
 COPY host/host-tailscale.cmd windows/host-tailscale.cmd
+COPY host/host-tailscale.sh linux/host-tailscale.sh
 ENV TS_HOST_ENV dde
 CMD /app/tailscaled --state=/var/lib/tailscale/tailscaled.state --tun=userspace-networking

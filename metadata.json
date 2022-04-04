@@ -34,7 +34,10 @@
         ],
         "linux": [
           {
-            "path": "/linux/hostname"
+            "path": "/linux/hostname.sh"
+          },
+          {
+            "path": "/linux/host-tailscale.sh"
           }
         ]
       }
