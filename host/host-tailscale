@@ -1,10 +1,10 @@
 #!/bin/sh
 set -e
 
-if [ $1 = "present" ]; then
+if [ "$1" = "present" ]; then
     /usr/bin/env test -d /Applications/Tailscale.app
-elif [ $1 = "status" ]; then
-    "${@:2}" status --json
-elif [ $1 = "start" ]; then
+elif [ "$1" = "status" ]; then
+    "$2" status --json
+elif [ "$1" = "start" ]; then
     /usr/bin/env open -a 'Tailscale'
 fi
