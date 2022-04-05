@@ -6,7 +6,7 @@ RUN curl -fSsLo /tmp/tailscale.tgz https://pkgs.tailscale.com/stable/tailscale_$
     && mkdir /out \
     && tar -C /out -xzf /tmp/tailscale.tgz --strip-components=1
 
-FROM node:14.17-alpine3.13 AS ui-builder
+FROM node:14.17-alpine AS ui-builder
 WORKDIR /app/ui
 # cache packages in layer
 COPY ui/package.json /app/ui/package.json

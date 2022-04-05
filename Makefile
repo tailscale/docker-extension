@@ -4,9 +4,7 @@ LOCAL_IMAGE_NAME=tailscale-docker-extension
 REMOTE_IMAGE_NAME=tailscale/docker-extension
 
 STATIC_FLAGS=CGO_ENABLED=0
-#GIT_TAG?=$(shell git describe --tags --match "[0-9]*")
-tag?=0.0.1
-GIT_TAG?=$(tag)
+GIT_TAG?=$(shell git describe --tags --match "[0-9]*")
 
 INFO_COLOR = \033[0;36m
 NO_COLOR   = \033[m
@@ -33,8 +31,8 @@ remove-extension:
 .PHONY: remove-extension
 
 push-extension: ## Build & Upload extension image to hub. Do not push if tag already exists: make push-extension tag=0.1
-	docker pull $(REMOTE_IMAGE_NAME):$(tag) && echo "Failure: Tag already exists" && exit 1
-	docker buildx build --push --builder=$(BUILDER) --platform=linux/arm64,linux/arm,linux/amd64 --build-arg TAG=${tag)} --tag=$(REMOTE_IMAGE_NAME):$(tag) .
+	docker pull $(REMOTE_IMAGE_NAME):$(GIT_TAG) && echo "Failure: Tag already exists" && exit 1
+	docker buildx build --push --builder=$(BUILDER) --platform=linux/arm64,linux/arm,linux/amd64 --build-arg TAG=$(GIT_TAG) --tag=$(REMOTE_IMAGE_NAME):$(GIT_TAG) .
 .PHONY: push-extension
 
 help: ## Show this help
