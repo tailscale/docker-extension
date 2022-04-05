@@ -11,14 +11,16 @@ export default function useInterval(fetcher: () => void, interval: number) {
     if (interval === null) {
       return
     }
-    // TODO: add support for refetching when the window regains focus, and
-    // pausing polling while the window isn't in view.
-    savedFetcher.current?.()
-    const timerId = window.setInterval(() => {
+    const fetch = () => {
       savedFetcher.current?.()
-    }, interval)
+    }
+
+    fetch()
+    window.addEventListener("focus", fetch)
+    const timerId = window.setInterval(fetch, interval)
     return () => {
       window.clearInterval(timerId)
+      window.removeEventListener("focus", fetch)
     }
   }, [interval])
 }
