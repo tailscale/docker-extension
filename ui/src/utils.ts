@@ -9,6 +9,13 @@ export async function openBrowser(url: string) {
   return ddClient.host.openExternal(url)
 }
 
+export function navigateToContainerLogs(containerId: string) {
+  // These functions aren't included on the official Docker typings, but they're
+  // present.
+  // @ts-ignore
+  ddClient.navigateToContainerLogs(containerId)
+}
+
 /**
  * isWindows detects if the current host system is Windows. We rely on the
  * assumption that the Electron instance will give us the right `userAgent`

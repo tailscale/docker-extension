@@ -11,7 +11,7 @@ import useTailscale, {
   openTailscaleOnHost,
 } from "src/tailscale"
 import copyToClipboard from "src/lib/clipboard"
-import { openBrowser } from "src/utils"
+import { navigateToContainerLogs, openBrowser } from "src/utils"
 import Icon from "src/components/icon"
 import useTimedToggle from "src/hooks/timed-toggle"
 
@@ -173,11 +173,16 @@ export default function ContainerView() {
 
 const containerSelector = (state: State) => ({
   containers: state.containers,
-  tailscaleIPs: state.tailscaleIPs,
+  tailscaleIP: state.tailscaleIPs.length > 0 ? state.tailscaleIPs[0] : "",
+  magicDNSEnabled: state.magicDNSStatus?.enabled || false,
+  magicDNSName: state.magicDNSStatus?.dnsName || "",
 })
 
 function ContainerTable() {
-  const { containers, tailscaleIPs } = useTailscale(containerSelector, shallow)
+  const { containers, tailscaleIP, magicDNSEnabled, magicDNSName } =
+    useTailscale(containerSelector, shallow)
+  const host = magicDNSEnabled ? magicDNSName : tailscaleIP
+  const hostIP = tailscaleIP
 
   return (
     <>
@@ -186,8 +191,8 @@ function ContainerTable() {
         <table className="w-full text-left">
           <thead>
             <tr>
-              <th className={tableHeaderClass}>Container</th>
-              <th className={tableHeaderClass}>Tailscale URL</th>
+              <th className={cx(tableHeaderClass, "w-1/3")}>Container</th>
+              <th className={cx(tableHeaderClass, "w-1/2")}>Tailscale URL</th>
               <th className={tableHeaderClass} />
             </tr>
           </thead>
@@ -196,7 +201,8 @@ function ContainerTable() {
               <ContainerRow
                 key={c.Id}
                 container={c}
-                tailscaleIP={tailscaleIPs[0]}
+                hostIP={hostIP}
+                host={host}
               />
             ))}
           </tbody>
@@ -213,22 +219,40 @@ function ContainerTable() {
   )
 }
 
-function ContainerRow(props: { container: Container; tailscaleIP: string }) {
-  const { container, tailscaleIP } = props
+function ContainerRow(props: {
+  container: Container
+  host: string
+  hostIP: string
+}) {
+  const { container, host, hostIP } = props
   const [copied, setCopied] = useTimedToggle(false, 1000)
+  const [persistTooltipCopy, setPersistTooltipCopy] = useTimedToggle(false, 200)
   const [showTooltip, setShowTooltip] = useState(false)
   const publicPort = container.Ports.find((p) => p.PublicPort !== undefined)
-  const tailscaleIPPort = `${tailscaleIP}:${publicPort?.PublicPort}`.trim()
-  const tailscaleURL = `http://${tailscaleIPPort}`
+  const tailscaleIPPort = `${host}:${publicPort?.PublicPort}`.trim()
+  const tailscaleURL = `http://${tailscaleIPPort}/`
+  const tailscaleIPUrl = `http://${hostIP}:${publicPort?.PublicPort}/`.trim()
 
   const handleCopyClick = useCallback(() => {
     copyToClipboard(tailscaleURL)
     setShowTooltip(true)
+    setPersistTooltipCopy(true)
     setCopied(true)
-  }, [tailscaleURL, setCopied])
+  }, [tailscaleURL, setPersistTooltipCopy, setCopied])
+
+  useEffect(() => {
+    if (copied === false) {
+      setPersistTooltipCopy(true)
+    }
+  }, [setPersistTooltipCopy, copied])
 
   return (
-    <tr className="group hover:bg-[rgba(255,255,255,0.5)] dark:hover:bg-docker-dark-gray-700 transition">
+    <tr
+      className={cx(
+        "group border-b hover:bg-[rgba(255,255,255,0.5)] dark:hover:bg-docker-dark-gray-700 transition",
+        borderColor,
+      )}
+    >
       <td className={cx(tableCellClass, "flex items-center")}>
         <Icon
           className={cx("mr-3", {
@@ -239,38 +263,60 @@ function ContainerRow(props: { container: Container; tailscaleIP: string }) {
           name="container"
           size="24"
         />
-        <span>{container.Names.map((n) => n.slice(1).trim()).join(",")}</span>
+        <span className="truncate">
+          {container.Names.map((n) => n.slice(1).trim()).join(",")}
+        </span>
       </td>
-      <td className={tableCellClass}>
+      <td className={cx(tableCellClass, "min-w-0")}>
         <Tooltip
           asChild
-          content={<span>{copied ? "Copied!" : "Copy URL to clipboard"}</span>}
+          content={
+            copied || persistTooltipCopy ? "Copied!" : "Copy URL to clipboard"
+          }
           closeOnClick={false}
-          open={showTooltip}
+          open={showTooltip || copied}
           onOpenChange={setShowTooltip}
         >
           <button
-            className={cx(tableButtonClass, "flex items-center")}
+            className={cx(tableButtonClass, "flex items-center min-w-0")}
             onClick={handleCopyClick}
           >
-            {tailscaleIPPort}
+            <span className="truncate">{tailscaleIPPort}</span>
             <Icon
-              className="ml-1.5 text-gray-400"
+              className="ml-1.5 text-gray-500 dark:text-gray-400"
               name={copied ? "check" : "clipboard"}
               size="14"
             />
           </button>
         </Tooltip>
       </td>
-      <td className={cx(tableCellClass, "space-x-4 text-right")}>
+      <td className={cx("space-x-3 text-right", tableButtonCellClass)}>
         <Tooltip asChild content="Open URL in browser">
           <button
-            className={tableButtonClass}
+            className={cx(tableIconButtonClass)}
             onClick={() => openBrowser(tailscaleURL)}
           >
-            Open
+            <Icon name="external-link" size="1.25em" />
           </button>
         </Tooltip>
+        <DropdownMenu
+          asChild
+          trigger={
+            <button className={cx(tableIconButtonClass)}>
+              <Icon name="more" size="1.25em" />
+            </button>
+          }
+        >
+          <DropdownMenu.Item onSelect={() => copyToClipboard(tailscaleIPUrl)}>
+            Copy IP address
+          </DropdownMenu.Item>
+          <DropdownMenu.Separator />
+          <DropdownMenu.Item
+            onSelect={() => navigateToContainerLogs(container.Id)}
+          >
+            View logs
+          </DropdownMenu.Item>
+        </DropdownMenu>
       </td>
     </tr>
   )
@@ -283,7 +329,10 @@ const tableHeaderClass = cx(
   tablePadding,
   borderColor,
 )
-const tableCellClass = cx("border-b h-14", tablePadding, borderColor)
+const tableCellClass = cx(tablePadding, borderColor)
+const tableButtonCellClass = cx("px-2", borderColor)
+const tableIconButtonClass =
+  "text-gray-600 dark:text-gray-300 focus:outline-none hover:bg-[rgba(31,41,55,0.05)] dark:hover:bg-[rgba(255,255,255,0.05)] focus-visible:bg-[rgba(31,41,55,0.05)] dark:focus-visible:bg-[rgba(255,255,255,0.05)] px-2 py-2 rounded"
 const tableButtonClass = "focus:outline-none focus-visible:ring"
 
 const hostWarningSelector = (state: State) => ({
@@ -341,7 +390,7 @@ function HostWarning() {
         }
 
   return (
-    <div className="flex flex-col items-start px-4 py-4 mb-4 rounded-md bg-gray-200 dark:bg-docker-dark-gray-700">
+    <div className="flex flex-col items-start px-4 py-4 mb-4 rounded-md bg-faded-gray-5 dark:bg-docker-dark-gray-700">
       <h3 className="font-semibold text-base mb-2">{messages.title}</h3>
       <p className="mb-4 max-w-3xl text-gray-700 dark:text-gray-200">
         {messages.description}
