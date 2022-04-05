@@ -23,7 +23,7 @@ export default function NeedsAuthView() {
     shallow,
   )
 
-  useInterval(fetchStatus, 750)
+  useInterval(fetchStatus, 2500)
 
   const authorizeIP = tailscaleIPs.find((ip) => ip.startsWith("100."))
   const authorizeUrl = authorizeIP

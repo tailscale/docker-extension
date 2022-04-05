@@ -59,7 +59,7 @@ export default function OnboardingView() {
     }
   }, [pendingButton, handleLogInClick, handleLogInQRClick, loginInfo])
 
-  useInterval(fetchStatus, 750)
+  useInterval(fetchStatus, 2500)
 
   return (
     <div>
