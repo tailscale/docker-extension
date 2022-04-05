@@ -36,6 +36,14 @@ export type State = {
   tailscaleIPs: string[]
 
   /**
+   * magicDNSStatus contains details about MagicDNS on the current tailnet.
+   */
+  magicDNSStatus?: {
+    enabled: boolean
+    dnsName: string
+  }
+
+  /**
    * loginInfo is an object with details that allow a user to log in.
    */
   loginInfo?: { authUrl: string; qrUrl: string }
@@ -146,6 +154,13 @@ const useTailscale = create<State>((set, get) => ({
   },
   fetchHostname: async () => {
     set({ hostname: ddClient.host.hostname })
+    // Keep in sync with tailscale/util/dnsname.TrimCommonSuffixes
+    // https://github.com/tailscale/tailscale/blob/main/util/dnsname/dnsname.go#L163
+    const hostname = ddClient.host.hostname
+      .replace(/\.local$/, "")
+      .replace(/\.localdomain$/, "")
+      .replace(/\.lan$/, "")
+    set({ hostname })
   },
   fetchStatus: async () => {
     try {
@@ -161,6 +176,14 @@ const useTailscale = create<State>((set, get) => ({
         backendState: status.BackendState,
         tailscaleIPs: status.Self.TailscaleIPs,
         loginUser: getLoginUserFromStatus(status, rawStatus),
+        magicDNSStatus: status.CurrentTailnet ? {
+          enabled: status.CurrentTailnet.MagicDNSEnabled,
+          dnsName: status.Self.DNSName
+            // Remove the Tailnet suffix, since search domains fill it in.
+            .replace(status.CurrentTailnet.MagicDNSSuffix, "")
+            // Remove the trailing dots.
+            .replace(/\.+$/, ""),
+        } : undefined,
         containers: containers
           // only show containers that expose a public port
           .filter((c) => c.Ports.some((p) => p.PublicPort))
@@ -200,9 +223,21 @@ export default useTailscale
 
 type StatusResponse = {
   BackendState: BackendState
-  Self: StatusSelf
+  Self: {
+    ID: string
+    UserID: number
+    HostName: string
+    DNSName: string
+    OS: string
+    TailscaleIPs: string[]
+    Capabilities: string[]
+  }
   User: Record<string, TailscaleUser> | null
-  TailnetName?: string // Only available in versions of Tailscale > 1.20.3
+  CurrentTailnet: {
+    Name: string
+    MagicDNSSuffix: string
+    MagicDNSEnabled: boolean
+  } | null
 }
 
 type TailscaleUser = {
@@ -211,16 +246,6 @@ type TailscaleUser = {
   DisplayName: string
   ProfilePicURL: string
   Roles: string[]
-}
-
-type StatusSelf = {
-  ID: string
-  UserID: number
-  HostName: string
-  DNSName: string
-  OS: string
-  TailscaleIPs: string[]
-  Capabilities: string[]
 }
 
 /**
@@ -257,10 +282,10 @@ function getLoginUserFromStatus(
     }
 
     if (
-      typeof status.TailnetName === "string" &&
-      status.TailnetName.length > 0
+      status.CurrentTailnet &&
+      status.CurrentTailnet.Name.length > 0
     ) {
-      loginUser.tailnetName = status.TailnetName
+      loginUser.tailnetName = status.CurrentTailnet.Name
     } else {
       loginUser.tailnetName = getTailnetName(loginUser.loginName)
     }
@@ -383,7 +408,7 @@ export async function openTailscaleOnHost(): Promise<void> {
     return
   }
   if (isMacOS()) {
-    hostExec("host-tailscale", ["start"])
+    await hostExec("host-tailscale", ["start"])
     return
   }
   // TODO: support Linux. For now we just don't open anything.
