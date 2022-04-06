@@ -1,8 +1,12 @@
+import { createDockerDesktopClient } from "@docker/extension-api-client"
+
+const ddClient = createDockerDesktopClient()
+
 /**
  * openBrowser opens a URL in the host system's browser
  */
 export async function openBrowser(url: string) {
-  return await window.ddClient.openExternal(url)
+  return ddClient.host.openExternal(url)
 }
 
 /**

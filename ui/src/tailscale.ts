@@ -1,3 +1,4 @@
+import { createDockerDesktopClient } from "@docker/extension-api-client"
 import create from "zustand"
 import shallowCompare from "zustand/shallow"
 import { isMacOS, isSharedDomain, isWindows, openBrowser } from "src/utils"
@@ -66,6 +67,8 @@ export type State = {
   fetchHostStatus: () => Promise<void>
 }
 
+const ddClient = createDockerDesktopClient()
+
 /**
  * useTailscale is a single hook that manages the state of Tailscale and
  * provides various methods to interact with it. All Tailscale state should
@@ -82,7 +85,7 @@ const useTailscale = create<State>((set, get) => ({
   loginUser: undefined,
 
   connect: async () => {
-    await runTailscaleCommand(`up`)
+    await vmExec(`/app/tailscale`, [`up`])
     await get().fetchStatus()
   },
   disconnect: async () => {
@@ -90,14 +93,14 @@ const useTailscale = create<State>((set, get) => ({
     const prev = get().backendState
     set({ backendState: "Stopped" })
     try {
-      await runTailscaleCommand(`down`)
+      await vmExec(`/app/tailscale`, [`down`])
     } catch (err) {
       set({ backendState: prev })
       throw err
     }
   },
   logout: async () => {
-    await runTailscaleCommand(`logout`)
+    await vmExec(`/app/tailscale`, [`logout`])
     set({
       backendState: "Stopped",
       loginInfo: undefined,
@@ -142,19 +145,14 @@ const useTailscale = create<State>((set, get) => ({
     }
   },
   fetchHostname: async () => {
-    try {
-      const resp = await window.ddClient.execHostCmd("hostname")
-      set({ hostname: resp.stdout.trim().toLowerCase() })
-    } catch (err) {
-      console.error("Error in fetchHostname:", err)
-    }
+    set({ hostname: ddClient.host.hostname })
   },
   fetchStatus: async () => {
     try {
       // TODO: separate out container fetching and Tailscale status fetching.
       const [statusResponse, containers] = await Promise.all([
         getTailscaleStatus(),
-        window.ddClient.listContainers(),
+        ddClient.docker.listContainers() as Promise<Container[]>,
       ])
       const [status, rawStatus] = statusResponse
       set((state) => ({
@@ -298,15 +296,8 @@ function getUserIDFromRawStatus(rawStatus: string): string | undefined {
 }
 
 async function getTailscaleStatus(): Promise<[StatusResponse, string]> {
-  const status = await runTailscaleCommand("status -json")
+  const status = await vmExec(`/app/tailscale`, ["status", "--json"])
   return [JSON.parse(status.stdout), status.stdout]
-}
-
-async function runTailscaleCommand(command: string): Promise<CommandOutput> {
-  const resp = await window.ddClient.backend.execInVMExtension(
-    `/app/tailscale ${command}`,
-  )
-  return resp
 }
 
 // TailscaleUpResponse: output of `tailscale up --json ...`
@@ -323,8 +314,14 @@ async function getLoginInfo(hostname: string): Promise<TailscaleUpResponse> {
   // We use `--force-reauth` because we want to provide users the option to
   // change their account. If we call `up` without `--force-reauth`, it just
   // tells us that it's already running.
-  const command = `/app/background-output.sh /app/tailscale up --hostname=${hostname}-docker-desktop --accept-dns=false --json --reset --force-reauth`
-  const resp = await window.ddClient.backend.execInVMExtension(command)
+  const resp = await vmExec("/app/background-output.sh", [
+    "/app/tailscale up",
+    `--hostname=${hostname}-docker-desktop`,
+    `--accept-dns=false`,
+    `--json`,
+    `--reset`,
+    `--force-reauth`,
+  ])
   let info = JSON.parse(resp.stdout)
   if (typeof info.AuthURL === "string") {
     // Add referral partner info to the URL
@@ -341,7 +338,7 @@ export type HostStatus = {
 }
 
 const windowsTailscalePath = async () => {
-  const output = await window.ddClient.execHostCmd("host-tailscale where")
+  const output = await hostExec("host-tailscale", ["where"])
   return `"${output.stdout.trim()}"`
 }
 const macOSTailscalePath =
@@ -355,9 +352,7 @@ async function isTailscaleOnHost(): Promise<boolean> {
       await windowsTailscalePath()
       return true
     }
-    await window.ddClient.execHostCmd(
-      "host-tailscale present",
-    )
+    await hostExec("host-tailscale", ["present"])
     return true
   } catch (err) {
     // An error means it failed or it couldn't detect it. We assume it's not
@@ -372,7 +367,7 @@ async function tailscaleOnHostStatus() {
     : isMacOS()
     ? macOSTailscalePath
     : linuxTailscalePath
-  const output = await window.ddClient.execHostCmd(`host-tailscale status ${hostPath}`)
+  const output = await hostExec("host-tailscale", ["status", hostPath])
   return [JSON.parse(output.stdout) as StatusResponse, output.stdout] as const
 }
 
@@ -383,16 +378,32 @@ async function tailscaleOnHostStatus() {
 export async function openTailscaleOnHost(): Promise<void> {
   if (isWindows()) {
     const path = await windowsTailscalePath()
-    const tailscaleIpnExe = path.replace('tailscale.exe', 'tailscale-ipn.exe');
-    await window.ddClient.execHostCmd(`host-tailscale start ${tailscaleIpnExe}`)
+    const tailscaleIpnExe = path.replace("tailscale.exe", "tailscale-ipn.exe")
+    await hostExec("host-tailscale", ["start", tailscaleIpnExe])
     return
   }
   if (isMacOS()) {
-    await window.ddClient.execHostCmd("host-tailscale start")
+    hostExec("host-tailscale", ["start"])
     return
   }
   // TODO: support Linux. For now we just don't open anything.
   return
+}
+
+async function vmExec(command: string, args: string[]) {
+  const vm = ddClient.extension.vm
+  if (typeof vm === "undefined") {
+    throw new Error("ddClient.extension.vm is undefined")
+  }
+  return await vm.cli.exec(command, args)
+}
+
+async function hostExec(command: string, args: string[]) {
+  const host = ddClient.extension.host
+  if (typeof host === "undefined") {
+    throw new Error("ddClient.extension.vm is undefined")
+  }
+  return await host.cli.exec(command, args)
 }
 
 /**
