@@ -1,6 +1,9 @@
 import { useEffect, useRef } from "react"
 
-export default function useInterval(fetcher: () => void, interval: number) {
+export default function useInterval(
+  fetcher: () => void,
+  interval: number | null,
+) {
   const savedFetcher = useRef<() => void>()
 
   useEffect(() => {

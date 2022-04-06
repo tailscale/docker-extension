@@ -26,6 +26,7 @@ const selector = (state: State) => ({
   fetchHostname: state.fetchHostname,
   fetchStatus: state.fetchStatus,
   fetchHostStatus: state.fetchHostStatus,
+  fetchContainers: state.fetchContainers,
 })
 
 function Router() {
@@ -36,7 +37,10 @@ function Router() {
     fetchHostname,
     fetchStatus,
     fetchHostStatus,
+    fetchContainers,
   } = useTailscale(selector, shallow)
+
+  const onboarding = showOnboarding(backendState, loginUser)
 
   useEffect(() => {
     fetchHostname()
@@ -44,6 +48,9 @@ function Router() {
 
   useInterval(fetchStatus, 5000)
   useInterval(fetchHostStatus, 10000)
+  // We slowly fetch containers in the onboarding view to make sure we have some
+  // preloaded data before users log in.
+  useInterval(fetchContainers, onboarding ? 20000 : null)
 
   if (!initialized) {
     return <LoadingView />
@@ -51,7 +58,7 @@ function Router() {
   if (backendState === "NeedsMachineAuth") {
     return <NeedsAuthView />
   }
-  if (showOnboarding(backendState, loginUser)) {
+  if (onboarding) {
     return <OnboardingView />
   }
   return <ContainerView />
