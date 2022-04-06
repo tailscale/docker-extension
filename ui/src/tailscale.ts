@@ -63,6 +63,14 @@ export type State = {
    * the login URL.
    */
   fetchLoginInfo: () => Promise<void>
+  /**
+   * fetchContainers loads data about the available Docker containers
+   */
+  fetchContainers: () => Promise<void>
+  /**
+   * fetchStatus loads information about the Tailscale instance within the
+   * Docker Desktop Extension VM.
+   */
   fetchStatus: () => Promise<void>
   /**
    * fetchHostname gets the hostname of the host machine, which is later used
@@ -153,7 +161,6 @@ const useTailscale = create<State>((set, get) => ({
     }
   },
   fetchHostname: async () => {
-    set({ hostname: ddClient.host.hostname })
     // Keep in sync with tailscale/util/dnsname.TrimCommonSuffixes
     // https://github.com/tailscale/tailscale/blob/main/util/dnsname/dnsname.go#L163
     const hostname = ddClient.host.hostname
@@ -162,33 +169,36 @@ const useTailscale = create<State>((set, get) => ({
       .replace(/\.lan$/, "")
     set({ hostname })
   },
+  fetchContainers: async () => {
+    const containers: Container[] =
+      (await ddClient.docker.listContainers()) as Container[]
+    set(() => ({
+      containers: containers
+        // only show containers that expose a public port
+        .filter((c) => c.Ports.some((p) => p.PublicPort))
+        // only show non-extension containers
+        .filter((c) => c.Labels["com.docker.desktop.plugin"] === undefined),
+    }))
+  },
   fetchStatus: async () => {
     try {
-      // TODO: separate out container fetching and Tailscale status fetching.
-      const [statusResponse, containers] = await Promise.all([
-        getTailscaleStatus(),
-        ddClient.docker.listContainers() as Promise<Container[]>,
-      ])
+      const statusResponse = await getTailscaleStatus()
       const [status, rawStatus] = statusResponse
-      set((state) => ({
-        ...state,
+      set(() => ({
         initialized: true,
         backendState: status.BackendState,
         tailscaleIPs: status.Self.TailscaleIPs,
         loginUser: getLoginUserFromStatus(status, rawStatus),
-        magicDNSStatus: status.CurrentTailnet ? {
-          enabled: status.CurrentTailnet.MagicDNSEnabled,
-          dnsName: status.Self.DNSName
-            // Remove the Tailnet suffix, since search domains fill it in.
-            .replace(status.CurrentTailnet.MagicDNSSuffix, "")
-            // Remove the trailing dots.
-            .replace(/\.+$/, ""),
-        } : undefined,
-        containers: containers
-          // only show containers that expose a public port
-          .filter((c) => c.Ports.some((p) => p.PublicPort))
-          // only show non-extension containers
-          .filter((c) => c.Labels["com.docker.desktop.plugin"] === undefined),
+        magicDNSStatus: status.CurrentTailnet
+          ? {
+              enabled: status.CurrentTailnet.MagicDNSEnabled,
+              dnsName: status.Self.DNSName
+                // Remove the Tailnet suffix, since search domains fill it in.
+                .replace(status.CurrentTailnet.MagicDNSSuffix, "")
+                // Remove the trailing dots.
+                .replace(/\.+$/, ""),
+            }
+          : undefined,
       }))
     } catch (err) {
       console.error("Error in fetchStatus:", err)
@@ -281,10 +291,7 @@ function getLoginUserFromStatus(
       tailnetName: "",
     }
 
-    if (
-      status.CurrentTailnet &&
-      status.CurrentTailnet.Name.length > 0
-    ) {
+    if (status.CurrentTailnet && status.CurrentTailnet.Name.length > 0) {
       loginUser.tailnetName = status.CurrentTailnet.Name
     } else {
       loginUser.tailnetName = getTailnetName(loginUser.loginName)
