@@ -14,7 +14,6 @@ import copyToClipboard from "src/lib/clipboard"
 import { navigateToContainerLogs, openBrowser } from "src/utils"
 import Icon from "src/components/icon"
 import useTimedToggle from "src/hooks/timed-toggle"
-import useInterval from "src/hooks/interval"
 
 type ConfirmLogoutAction = "logout" | "none"
 
@@ -24,7 +23,6 @@ const selector = (state: State) => ({
   connect: state.connect,
   disconnect: state.disconnect,
   switchAccount: state.switchAccount,
-  fetchContainers: state.fetchContainers,
   logout: state.logout,
 })
 
@@ -33,19 +31,13 @@ const selector = (state: State) => ({
  * the list of containers and Tailscale URLs they can use to access them.
  */
 export default function ContainerView() {
-  const {
-    backendState,
-    loginUser,
-    fetchContainers,
-    connect,
-    disconnect,
-    logout,
-  } = useTailscale(selector, shallow)
+  const { backendState, loginUser, connect, disconnect, logout } = useTailscale(
+    selector,
+    shallow,
+  )
   const [connecting, setConnecting] = useState(false)
   const [confirmLogoutAction, setConfirmLogoutAction] =
     useState<ConfirmLogoutAction>("none")
-
-  useInterval(fetchContainers, 3000)
 
   const handleConnectClick = useCallback(async () => {
     setConnecting(true)
