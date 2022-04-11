@@ -34,6 +34,21 @@ export function isMacOS() {
   return navigator.userAgent.match(/Macintosh/i)
 }
 
+/**
+ * debounce limits the number of times fn is called within a given time period.
+ */
+export function debounce<T extends (...args: any[]) => any>(
+  fn: T,
+  wait: number = 200,
+) {
+  let timeoutId = 0
+  let callable = (...args: Parameters<T>) => {
+    clearTimeout(timeoutId)
+    timeoutId = window.setTimeout(() => fn(...args), wait)
+  }
+  return callable
+}
+
 // HACK: temporarily using this until we update the `tailscale status --json`
 // to give us a domain by itself. This list is duplicated from a control export
 // and these lines https://github.com/tailscale/corp/blob/main/control/cfgdb/cfgdb.go#L812-L1025

@@ -2,6 +2,7 @@ import { createDockerDesktopClient } from "@docker/extension-api-client"
 import create from "zustand"
 import shallowCompare from "zustand/shallow"
 import { isMacOS, isSharedDomain, isWindows, openBrowser } from "src/utils"
+import mitt from "mitt"
 
 // BackendState
 // Keep in sync with https://github.com/tailscale/tailscale/blob/main/ipn/backend.go
@@ -170,15 +171,19 @@ const useTailscale = create<State>((set, get) => ({
     set({ hostname })
   },
   fetchContainers: async () => {
-    const containers: Container[] =
+    const allContainers: Container[] =
       (await ddClient.docker.listContainers()) as Container[]
-    set(() => ({
-      containers: containers
+    set((prev) => {
+      const containers = allContainers
         // only show containers that expose a public port
         .filter((c) => c.Ports.some((p) => p.PublicPort))
         // only show non-extension containers
-        .filter((c) => c.Labels["com.docker.desktop.plugin"] === undefined),
-    }))
+        .filter((c) => c.Labels["com.docker.desktop.plugin"] === undefined)
+      if (shallow(prev.containers, containers)) {
+        return prev
+      }
+      return { containers }
+    })
   },
   fetchStatus: async () => {
     try {
@@ -309,6 +314,64 @@ function getLoginUserFromStatus(
 function getTailnetName(loginName: string) {
   const [, suffix] = loginName.split("@")
   return isSharedDomain(suffix) ? loginName : suffix
+}
+
+// dockerEvents is a global emitter to track container events from Docker.
+// Since we can't yet close an exec command to Docker, we do this globally so
+// there's only one instance running at a time for all components.
+const dockerEvents = mitt()
+let isSubscribedToContainers = false
+
+type DockerEvent = (
+  | { Type: "container"; Action: "attach" }
+  | { Type: "container"; Action: "create" }
+  | { Type: "container"; Action: "rename" }
+  | { Type: "container"; Action: "destroy" }
+  | { Type: "container"; Action: "die" }
+  | { Type: "network"; Action: "connect" }
+  | { Type: "network"; Action: "disconnect" }
+) & { id: string; from: string }
+
+/**
+ * subscribeToContainers returns an event emitter that emits events from the
+ * Docker CLI.
+ */
+export function subscribeToContainers() {
+  if (!isSubscribedToContainers) {
+    ddClient.docker.cli.exec(
+      "events",
+      [
+        "--format",
+        "{{ json . }}",
+        "--filter",
+        "type=container",
+        "--filter",
+        "type=network",
+      ],
+      {
+        stream: {
+          onOutput: (output) => {
+            // Look to see if the event is from the Tailscale extension. If so,
+            // ignore it. We do string parsing here so (a) we don't waste time
+            // parsing JSON, and (b) because some events failed JSON parsing.
+            if (
+              output.stdout?.includes(`"from":"tailscale-docker-extension"`)
+            ) {
+              return
+            }
+            try {
+              const event = JSON.parse(output.stdout || "{}") as DockerEvent
+              dockerEvents.emit(event.Type, event)
+            } catch (err) {
+              dockerEvents.emit("error", err)
+            }
+          },
+        },
+      },
+    )
+    isSubscribedToContainers = true
+  }
+  return dockerEvents
 }
 
 /**

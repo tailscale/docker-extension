@@ -1,6 +1,12 @@
 import { Suspense, useEffect } from "react"
 import Tooltip from "src/components/tooltip"
-import useTailscale, { State, BackendState, shallow } from "src/tailscale"
+import useTailscale, {
+  State,
+  BackendState,
+  shallow,
+  subscribeToContainers,
+} from "src/tailscale"
+import { debounce } from "src/utils"
 import useInterval from "src/hooks/interval"
 import ContainerView from "src/views/container-view"
 import LoadingView from "src/views/loading-view"
@@ -46,11 +52,21 @@ function Router() {
     fetchHostname()
   }, [fetchHostname])
 
+  useEffect(() => {
+    // Fetch containers whenever Docker tells us they change.
+    const containers = subscribeToContainers()
+    const fetch = debounce(fetchContainers, 400)
+    fetchContainers()
+    containers.on("container", fetch)
+    containers.on("network", fetch)
+    return () => {
+      containers.off("container", fetch)
+      containers.off("network", fetch)
+    }
+  }, [fetchContainers])
+
   useInterval(fetchStatus, 5000)
   useInterval(fetchHostStatus, 10000)
-  // We slowly fetch containers in the onboarding view to make sure we have some
-  // preloaded data before users log in.
-  useInterval(fetchContainers, onboarding ? 20000 : null)
 
   if (!initialized) {
     return <LoadingView />
