@@ -54,14 +54,32 @@ function Router() {
 
   useEffect(() => {
     // Fetch containers whenever Docker tells us they change.
-    const containers = subscribeToContainers()
-    const fetch = debounce(fetchContainers, 400)
+
+    // We debounce the fetch call to avoid requesting too many times when
+    // containers start up or shut down. There's usually 3–5 events in quick
+    // succession, but we only need to fetch once.
+    const fetch = debounce((event) => {
+      // console.log(
+      //   "fetching because of event",
+      //   event.Type,
+      //   event.Action,
+      //   event.time,
+      // )
+      fetchContainers()
+    }, 600)
+    const watcher = subscribeToContainers({
+      onEvent: (event) => fetch(event),
+      onError: (err) => {
+        console.error("Docker error:", err)
+      },
+    })
     fetchContainers()
-    containers.on("container", fetch)
-    containers.on("network", fetch)
+    if (typeof watcher === "undefined" || typeof watcher.close !== "function") {
+      // Older versions of Docker don't have a close function.
+      return
+    }
     return () => {
-      containers.off("container", fetch)
-      containers.off("network", fetch)
+      watcher.close()
     }
   }, [fetchContainers])
 
