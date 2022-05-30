@@ -18,7 +18,9 @@ extension: ## Build service image to be deployed as a desktop extension
 .PHONY: extension
 
 install-extension: extension ## Install extension image Docker desktop
-	docker extension update $(LOCAL_IMAGE_NAME)
+	@if $$(docker extension ls | grep -q $(LOCAL_IMAGE_NAME)); \
+		then docker extension update $(LOCAL_IMAGE_NAME); \
+		else docker extension install $(LOCAL_IMAGE_NAME); fi
 .PHONY: install-extension
 
 dev-extension: install-extension
@@ -27,7 +29,7 @@ dev-extension: install-extension
 .PHONY: dev-extension
 
 remove-extension:
-	@docker extension remove $(LOCAL_IMAGE_NAME)
+	@docker extension rm $(LOCAL_IMAGE_NAME)
 .PHONY: remove-extension
 
 push-extension: ## Build & Upload extension image to hub. Do not push if tag already exists: make push-extension tag=0.1
