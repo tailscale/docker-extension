@@ -21,7 +21,25 @@
   html,
   body,
   #root {
-    height: 100%;
+    @apply font-sans text-base h-full antialiased;
+  }
+
+  body {
+    /**
+     * We apply some default values from Docker Desktop's default theme prior to
+     * version 4.9. This is overriden in the #root declaration below.
+     */
+    @apply bg-[#f4f4f6] dark:bg-[#202c33] text-[rgba(0,0,0,0.87)] dark:text-white p-0;
+  }
+
+  #root {
+    /**
+     * We override the body styles here to prevent Docker's theme
+     * from affecting us.
+     */
+    background-color: var(--dd-color-background);
+    color: var(--dd-text-color-primary);
+    padding: var(--dd-page-padding-top, 1.5rem) var(--dd-page-padding-right, 1.5rem) var(--dd-page-padding-bottom, 1.5rem) var(--dd-page-padding-left, 1.5rem);
   }
 }
 

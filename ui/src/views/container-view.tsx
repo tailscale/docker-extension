@@ -70,7 +70,7 @@ export default function ContainerView() {
           longer be able to access your containers.
         </p>
       </Dialog>
-      <header className="flex items-center justify-between py-5">
+      <header className="flex items-center justify-between pb-5">
         <div>
           <div className="font-semibold text-xl">Tailscale</div>
           <div className="flex items-center text-gray-500 dark:text-gray-400">

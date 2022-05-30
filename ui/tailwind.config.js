@@ -34,10 +34,17 @@ module.exports = {
         "docker-gray-200": "#E1E2E6",
         "docker-gray-100": "#F9F9FA",
 
+        "docker-blue-300": "var(--dd-color-blue-300)",
+        "docker-blue-500": "var(--dd-color-blue-500)",
+        "docker-blue-700": "var(--dd-color-blue-700)",
+
         "faded-gray-5": "rgba(31,41,55,0.05)",
         "faded-gray-15": "rgba(31,41,55,0.15)",
         "faded-gray-25": "rgba(31,41,55,0.25)",
         "faded-white-5": "rgba(255,255,255,0.05)",
+      },
+      fontFamily: {
+        sans: ["Open SansVariable", "Open Sans", "-apple-system", "sans-serif"],
       },
       boxShadow: {
         avatar:
