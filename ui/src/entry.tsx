@@ -14,8 +14,6 @@ import NeedsAuthView from "src/views/needs-auth-view"
 import OnboardingView from "src/views/onboarding-view"
 
 export default function App() {
-  useRemoveDockerStyles()
-
   return (
     <Tooltip.Provider>
       <div className="text-sm h-full">
@@ -108,20 +106,4 @@ const showOnboarding = (state: BackendState, user?: object) => {
     return true
   }
   return false
-}
-
-/**
- * useRemoveDockerStyles removes the `dockerDesktopTheme` classname that gets
- * injected by Docker Desktop. These styles seem like they may change regularly,
- * so opting out lets us control our UI better, and only make changes when
- * necessary.
- */
-function useRemoveDockerStyles() {
-  useEffect(() => {
-    const dockerThemeClass = "dockerDesktopTheme"
-    const $body = document.body;
-    if ($body && $body.classList.contains(dockerThemeClass)) {
-      $body.classList.remove(dockerThemeClass)
-    }
-  }, [])
 }
