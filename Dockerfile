@@ -20,7 +20,7 @@ RUN --mount=type=cache,target=/usr/local/share/.cache/yarn-${TARGETARCH} yarn bu
 
 FROM debian:bullseye-slim
 LABEL org.opencontainers.image.title="Tailscale" \
-    org.opencontainers.image.description="Connect your Docker containers to your secure private network." \
+    org.opencontainers.image.description="Tailscale lets you securely connect to your Docker containers without exposing them to the public internet." \
     org.opencontainers.image.authors="Tailscale Inc." \
     org.opencontainers.image.vendor="Tailscale Inc." \
     com.docker.desktop.extension.icon="https://tailscale.com/files/tailscale-docker-icon.svg" \
