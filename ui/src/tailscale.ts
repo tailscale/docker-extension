@@ -434,7 +434,7 @@ const windowsTailscalePath = async () => {
   return `"${output.stdout.trim()}"`
 }
 const macOSTailscalePath =
-  "/Applications/Tailscale.app/Contents/MacOS/tailscale"
+  "/Applications/Tailscale.app/Contents/MacOS/Tailscale"
 const linuxTailscalePath = "/usr/bin/env tailscale"
 
 async function isTailscaleOnHost(): Promise<boolean> {
