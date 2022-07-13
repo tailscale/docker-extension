@@ -188,31 +188,31 @@ function ContainerTable() {
     <>
       <HostWarning />
       {containers.length > 0 ? (
-        <table className="w-full text-left">
-          <thead>
-            <tr>
-              <th className={cx(tableHeaderClass, "w-1/3")}>Container</th>
-              <th className={cx(tableHeaderClass, "w-1/2")}>Tailscale URL</th>
-              <th className={tableHeaderClass} />
-            </tr>
-          </thead>
-          <tbody>
-            {containers.map((c) => (
-              <ContainerRow
-                key={c.Id}
-                container={c}
-                hostIP={hostIP}
-                host={host}
-              />
-            ))}
-          </tbody>
-        </table>
+        <>
+          <table className="w-full text-left">
+            <thead>
+              <tr>
+                <th className={cx(tableHeaderClass, "w-1/3")}>Container</th>
+                <th className={cx(tableHeaderClass, "w-1/2")}>Tailscale URL</th>
+                <th className={tableHeaderClass} />
+              </tr>
+            </thead>
+            <tbody>
+              {containers.map((c) => (
+                <ContainerRow
+                  key={c.Id}
+                  container={c}
+                  hostIP={hostIP}
+                  host={host}
+                />
+              ))}
+            </tbody>
+          </table>
+        </>
       ) : (
         <div className="text-center py-12">
           <p className="text-xl font-medium mb-1">No containers are running.</p>
-          <p className="text-gray-500 dark:text-gray-400">
-            Go to the Containers tab to get started.
-          </p>
+          <p className="help-text">Go to the Containers tab to get started.</p>
         </div>
       )}
     </>
@@ -232,6 +232,9 @@ function ContainerRow(props: {
   const tailscaleIPPort = `${host}:${publicPort?.PublicPort}`.trim()
   const tailscaleURL = `http://${tailscaleIPPort}/`
   const tailscaleIPUrl = `http://${hostIP}:${publicPort?.PublicPort}/`.trim()
+
+  const hasPublicPorts = container.Ports.some((p) => p.PublicPort)
+  const online = container.State === "running" && hasPublicPorts
 
   const handleCopyClick = useCallback(() => {
     copyToClipboard(tailscaleURL)
@@ -256,9 +259,8 @@ function ContainerRow(props: {
       <td className={cx(tableCellClass, "flex items-center")}>
         <Icon
           className={cx("mr-3", {
-            "text-emerald-400 dark:text-green-300":
-              container.State === "running",
-            "text-gray-600": container.State !== "running",
+            "text-emerald-400 dark:text-green-300": online,
+            "text-gray-400 dark:text-gray-600": !online,
           })}
           name="container"
           size="24"
@@ -268,31 +270,49 @@ function ContainerRow(props: {
         </span>
       </td>
       <td className={cx(tableCellClass, "min-w-0")}>
-        <Tooltip
-          asChild
-          content={
-            copied || persistTooltipCopy ? "Copied!" : "Copy URL to clipboard"
-          }
-          closeOnClick={false}
-          open={showTooltip || copied}
-          onOpenChange={setShowTooltip}
-        >
-          <button
-            className={cx(tableButtonClass, "flex items-center min-w-0")}
-            onClick={handleCopyClick}
+        {hasPublicPorts ? (
+          <Tooltip
+            asChild
+            content={
+              copied || persistTooltipCopy ? "Copied!" : "Copy URL to clipboard"
+            }
+            closeOnClick={false}
+            open={showTooltip || copied}
+            onOpenChange={setShowTooltip}
           >
-            <span className="truncate">{tailscaleIPPort}</span>
-            <Icon
-              className="ml-1.5 text-gray-500 dark:text-gray-400"
-              name={copied ? "check" : "clipboard"}
-              size="14"
-            />
-          </button>
-        </Tooltip>
+            <button
+              className={cx(tableButtonClass, "flex items-center min-w-0")}
+              onClick={handleCopyClick}
+            >
+              <span className="truncate">{tailscaleIPPort}</span>
+              <Icon
+                className="ml-1.5 text-gray-500 dark:text-gray-400"
+                name={copied ? "check" : "clipboard"}
+                size="14"
+              />
+            </button>
+          </Tooltip>
+        ) : (
+          <Tooltip
+            content={
+              <>
+                This container has no public ports. Expose ports using{" "}
+                <code className="code">docker run</code> with the{" "}
+                <code className="code">-p</code> flag.
+              </>
+            }
+          >
+            <div className="flex items-center min-w-0 help-text">
+              <Icon name="error" size="14" />
+              <span className="truncate ml-1.5">No public ports</span>
+            </div>
+          </Tooltip>
+        )}
       </td>
       <td className={cx("space-x-3 text-right", tableButtonCellClass)}>
         <Tooltip asChild content="Open URL in browser">
           <button
+            disabled={!online}
             className={cx(tableIconButtonClass)}
             onClick={() => openBrowser(tailscaleURL)}
           >
@@ -307,7 +327,10 @@ function ContainerRow(props: {
             </button>
           }
         >
-          <DropdownMenu.Item onSelect={() => copyToClipboard(tailscaleIPUrl)}>
+          <DropdownMenu.Item
+            disabled={!online}
+            onSelect={() => copyToClipboard(tailscaleIPUrl)}
+          >
             Copy IP address
           </DropdownMenu.Item>
           <DropdownMenu.Separator />
@@ -332,7 +355,7 @@ const tableHeaderClass = cx(
 const tableCellClass = cx(tablePadding, borderColor)
 const tableButtonCellClass = cx("px-2", borderColor)
 const tableIconButtonClass =
-  "text-gray-600 dark:text-gray-300 focus:outline-none hover:bg-[rgba(31,41,55,0.05)] dark:hover:bg-[rgba(255,255,255,0.05)] focus-visible:bg-[rgba(31,41,55,0.05)] dark:focus-visible:bg-[rgba(255,255,255,0.05)] px-2 py-2 rounded"
+  "text-gray-600 dark:text-gray-300 focus:outline-none enabled:hover:bg-[rgba(31,41,55,0.05)] enabled:dark:hover:bg-[rgba(255,255,255,0.05)] focus-visible:bg-[rgba(31,41,55,0.05)] dark:focus-visible:bg-[rgba(255,255,255,0.05)] px-2 py-2 rounded disabled:opacity-50"
 const tableButtonClass = "focus:outline-none focus-visible:ring"
 
 const hostWarningSelector = (state: State) => ({

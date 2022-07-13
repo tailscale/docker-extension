@@ -39,7 +39,9 @@
      */
     background-color: var(--dd-color-background);
     color: var(--dd-text-color-primary);
-    padding: var(--dd-page-padding-top, 1.5rem) var(--dd-page-padding-right, 1.5rem) var(--dd-page-padding-bottom, 1.5rem) var(--dd-page-padding-left, 1.5rem);
+    padding: var(--dd-page-padding-top, 1.5rem)
+      var(--dd-page-padding-right, 1.5rem) var(--dd-page-padding-bottom, 1.5rem)
+      var(--dd-page-padding-left, 1.5rem);
   }
 }
 
@@ -164,6 +166,14 @@
     100% {
       opacity: 0.2;
     }
+  }
+
+  .help-text {
+    @apply text-gray-500 dark:text-gray-400;
+  }
+
+  .code {
+    @apply font-mono bg-gray-800/5 dark:bg-white/5 px-1.5 py-0.5 rounded-lg;
   }
 }
 

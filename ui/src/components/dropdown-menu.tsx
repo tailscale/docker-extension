@@ -103,7 +103,7 @@ function DropdownMenuItem(props: DropdownMenuItemProps) {
     <MenuPrimitive.Item
       className={cx(className, menuItemClasses, menuItemInteractiveClasses, {
         "text-red-400": intent === "danger",
-        "text-gray-400 bg-white cursor-default": disabled,
+        "text-gray-400 cursor-default": disabled,
       })}
       disabled={disabled}
       {...rest}
