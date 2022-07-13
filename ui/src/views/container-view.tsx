@@ -368,8 +368,13 @@ function HostWarning() {
     hostStatus.status === "installed"
       ? {
           title: "Your host device is not running Tailscale",
-          description:
-            "Tailscale's private URLs are only accessible on devices running Tailscale. To access these URLs, install Tailscale on your host device and log in.",
+          description: (
+            <>
+              Tailscale is installed on your host device, but is not running.
+              Open Tailscale and log in on your host device to access private
+              Tailscale URLs.
+            </>
+          ),
         }
       : hostStatus.status === "running" && hostStatus.loginName !== loginName
       ? {
