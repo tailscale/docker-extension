@@ -30,6 +30,12 @@ export type State = {
    */
   initialized: boolean
   backendState: BackendState
+  /**
+   * containers is the list of Docker containers currently running. This list
+   * filters out all extension containers, but includes all containers that
+   * are running, including those that don't expose public ports. Be sure to
+   * filter down to containers with public ports before offering URLs to users.
+   */
   containers: Container[]
   hostname: string
   hostStatus: HostStatus
@@ -174,8 +180,6 @@ const useTailscale = create<State>((set, get) => ({
       (await ddClient.docker.listContainers()) as Container[]
     set((prev) => {
       const containers = allContainers
-        // only show containers that expose a public port
-        .filter((c) => c.Ports.some((p) => p.PublicPort))
         // only show non-extension containers
         .filter((c) => c.Labels["com.docker.desktop.plugin"] === undefined)
       if (shallow(prev.containers, containers)) {
