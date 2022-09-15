@@ -133,6 +133,9 @@ export default function ContainerView() {
             <DropdownMenu.Link href="https://tailscale.com/download">
               Download Tailscale
             </DropdownMenu.Link>
+            <DropdownMenu.Link href="https://tailscale.com/licenses/tailscale">
+              Open Source Licenses
+            </DropdownMenu.Link>
             <DropdownMenu.Separator />
             <DropdownMenu.Item
               onSelect={() => setConfirmLogoutAction("logout")}
