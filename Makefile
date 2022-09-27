@@ -1,6 +1,6 @@
 BUILDER=buildx-multi-arch
 
-LOCAL_IMAGE_NAME=tailscale-docker-extension
+LOCAL_IMAGE_NAME=tailscale/docker-extension-dev
 REMOTE_IMAGE_NAME=tailscale/docker-extension
 
 STATIC_FLAGS=CGO_ENABLED=0
