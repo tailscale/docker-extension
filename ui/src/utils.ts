@@ -10,10 +10,7 @@ export async function openBrowser(url: string) {
 }
 
 export function navigateToContainerLogs(containerId: string) {
-  // These functions aren't included on the official Docker typings, but they're
-  // present.
-  // @ts-ignore
-  ddClient.navigateToContainerLogs(containerId)
+  ddClient.desktopUI.navigate.viewContainerLogs(containerId)
 }
 
 /**
