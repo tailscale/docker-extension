@@ -411,7 +411,8 @@ async function getLoginInfo(hostname: string): Promise<TailscaleUpResponse> {
   // change their account. If we call `up` without `--force-reauth`, it just
   // tells us that it's already running.
   const resp = await vmExec("/app/background-output.sh", [
-    "/app/tailscale up",
+    "/app/tailscale",
+    "up",
     `--hostname=${hostname}-docker-desktop`,
     `--accept-dns=false`,
     `--json`,
