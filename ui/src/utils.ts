@@ -9,6 +9,10 @@ export async function openBrowser(url: string) {
   return ddClient.host.openExternal(url)
 }
 
+export function navigateToContainer(containerId: string) {
+  ddClient.desktopUI.navigate.viewContainer(containerId)
+}
+
 export function navigateToContainerLogs(containerId: string) {
   ddClient.desktopUI.navigate.viewContainerLogs(containerId)
 }

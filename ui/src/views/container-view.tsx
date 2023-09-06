@@ -11,7 +11,11 @@ import useTailscale, {
   openTailscaleOnHost,
 } from "src/tailscale"
 import copyToClipboard from "src/lib/clipboard"
-import { navigateToContainerLogs, openBrowser } from "src/utils"
+import {
+  navigateToContainer,
+  navigateToContainerLogs,
+  openBrowser,
+} from "src/utils"
 import Icon from "src/components/icon"
 import useTimedToggle from "src/hooks/timed-toggle"
 
@@ -192,12 +196,16 @@ function ContainerTable() {
       <HostWarning />
       {containers.length > 0 ? (
         <>
-          <table className="w-full text-left">
+          <table className="table-fixed w-full text-left">
             <thead>
               <tr>
-                <th className={cx(tableHeaderClass, "w-1/3")}>Container</th>
-                <th className={cx(tableHeaderClass, "w-1/2")}>Tailscale URL</th>
-                <th className={tableHeaderClass} />
+                <th className={cx(tableHeaderClass, "w-1/3 sm:w-2/5")}>
+                  Container
+                </th>
+                <th className={cx(tableHeaderClass, "w-1/3 sm:w-2/5")}>
+                  Tailscale URL
+                </th>
+                <th className={cx(tableHeaderClass, "w-1/6")} />
               </tr>
             </thead>
             <tbody>
@@ -259,20 +267,22 @@ function ContainerRow(props: {
         borderColor,
       )}
     >
-      <td className={cx(tableCellClass, "flex items-center")}>
-        <Icon
-          className={cx("mr-3", {
-            "text-emerald-400 dark:text-green-300": online,
-            "text-gray-400 dark:text-gray-600": !online,
-          })}
-          name="container"
-          size="24"
-        />
-        <span className="truncate">
-          {container.Names.map((n) => n.slice(1).trim()).join(",")}
-        </span>
+      <td className={cx(tableCellClass)}>
+        <div className="flex items-center min-w-0">
+          <Icon
+            className={cx("mr-3 shrink-0", {
+              "text-emerald-400 dark:text-green-300": online,
+              "text-gray-400 dark:text-gray-600": !online,
+            })}
+            name="container"
+            size="24"
+          />
+          <span className="truncate">
+            {container.Names.map((n) => n.slice(1).trim()).join(",")}
+          </span>
+        </div>
       </td>
-      <td className={cx(tableCellClass, "min-w-0")}>
+      <td className={cx(tableCellClass)}>
         {hasPublicPorts ? (
           <Tooltip
             asChild
@@ -284,12 +294,12 @@ function ContainerRow(props: {
             onOpenChange={setShowTooltip}
           >
             <button
-              className={cx(tableButtonClass, "flex items-center min-w-0")}
+              className={cx(tableButtonClass, "flex items-center max-w-full")}
               onClick={handleCopyClick}
             >
-              <span className="truncate">{tailscaleIPPort}</span>
+              <span className="truncate min-w-0">{tailscaleIPPort}</span>
               <Icon
-                className="ml-1.5 text-gray-500 dark:text-gray-400"
+                className="ml-1.5 text-gray-500 dark:text-gray-400 shrink-0"
                 name={copied ? "check" : "clipboard"}
                 size="14"
               />
@@ -312,51 +322,57 @@ function ContainerRow(props: {
           </Tooltip>
         )}
       </td>
-      <td className={cx("space-x-3 text-right", tableButtonCellClass)}>
-        <Tooltip asChild content="Open URL in browser">
-          <button
-            disabled={!online}
-            className={cx(tableIconButtonClass)}
-            onClick={() => openBrowser(tailscaleURL)}
-          >
-            <Icon name="external-link" size="1.25em" />
-          </button>
-        </Tooltip>
-        <DropdownMenu
-          asChild
-          trigger={
-            <button className={cx(tableIconButtonClass)}>
-              <Icon name="more" size="1.25em" />
+      <td className={cx(tableCellClass)}>
+        <div className="flex justify-end items-center gap-x-2">
+          <Tooltip asChild content="Open URL in browser">
+            <button
+              disabled={!online}
+              className={cx(tableIconButtonClass)}
+              onClick={() => openBrowser(tailscaleURL)}
+            >
+              <Icon name="external-link" size="1.25em" />
             </button>
-          }
-        >
-          <DropdownMenu.Item
-            disabled={!online}
-            onSelect={() => copyToClipboard(tailscaleIPUrl)}
+          </Tooltip>
+          <DropdownMenu
+            asChild
+            trigger={
+              <button className={cx(tableIconButtonClass)}>
+                <Icon name="more" size="1.25em" />
+              </button>
+            }
           >
-            Copy IP address
-          </DropdownMenu.Item>
-          <DropdownMenu.Separator />
-          <DropdownMenu.Item
-            onSelect={() => navigateToContainerLogs(container.Id)}
-          >
-            View logs
-          </DropdownMenu.Item>
-        </DropdownMenu>
+            <DropdownMenu.Item
+              disabled={!online}
+              onSelect={() => copyToClipboard(tailscaleIPUrl)}
+            >
+              Copy IP address
+            </DropdownMenu.Item>
+            <DropdownMenu.Separator />
+            <DropdownMenu.Item
+              onSelect={() => navigateToContainer(container.Id)}
+            >
+              View container
+            </DropdownMenu.Item>
+            <DropdownMenu.Item
+              onSelect={() => navigateToContainerLogs(container.Id)}
+            >
+              View logs
+            </DropdownMenu.Item>
+          </DropdownMenu>
+        </div>
       </td>
     </tr>
   )
 }
 
 const borderColor = "border-gray-200 dark:border-[rgba(255,255,255,0.09)]"
-const tablePadding = "px-2 py-4"
+const tablePadding = "px-2 h-14"
 const tableHeaderClass = cx(
   "uppercase tracking-wider text-gray-700 dark:text-gray-200 text-xs border-b select-none",
   tablePadding,
   borderColor,
 )
 const tableCellClass = cx(tablePadding, borderColor)
-const tableButtonCellClass = cx("px-2", borderColor)
 const tableIconButtonClass =
   "text-gray-600 dark:text-gray-300 focus:outline-none enabled:hover:bg-[rgba(31,41,55,0.05)] enabled:dark:hover:bg-[rgba(255,255,255,0.05)] focus-visible:bg-[rgba(31,41,55,0.05)] dark:focus-visible:bg-[rgba(255,255,255,0.05)] px-2 py-2 rounded disabled:opacity-50"
 const tableButtonClass = "focus:outline-none focus-visible:ring"
