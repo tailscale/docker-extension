@@ -1,7 +1,7 @@
 FROM alpine AS tailscale
 RUN apk add --no-cache curl
 ARG TARGETARCH
-ARG TSVERSION=1.58.2
+ARG TSVERSION=1.66.4
 RUN curl -fSsLo /tmp/tailscale.tgz https://pkgs.tailscale.com/stable/tailscale_${TSVERSION}_${TARGETARCH}.tgz \
     && mkdir /out \
     && tar -C /out -xzf /tmp/tailscale.tgz --strip-components=1
