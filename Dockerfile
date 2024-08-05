@@ -1,12 +1,12 @@
 FROM alpine AS tailscale
 RUN apk add --no-cache curl
 ARG TARGETARCH
-ARG TSVERSION=1.58.2
+ARG TSVERSION=1.70.0
 RUN curl -fSsLo /tmp/tailscale.tgz https://pkgs.tailscale.com/stable/tailscale_${TSVERSION}_${TARGETARCH}.tgz \
     && mkdir /out \
     && tar -C /out -xzf /tmp/tailscale.tgz --strip-components=1
 
-FROM node:18.14-alpine AS ui-builder
+FROM node:22-alpine AS ui-builder
 WORKDIR /app/ui
 # cache packages in layer
 COPY ui/package.json /app/ui/package.json
@@ -52,5 +52,5 @@ COPY host/hostname.sh linux/hostname.sh
 COPY host/host-tailscale darwin/host-tailscale
 COPY host/host-tailscale.cmd windows/host-tailscale.cmd
 COPY host/host-tailscale.sh linux/host-tailscale.sh
-ENV TS_HOST_ENV dde
-CMD /app/tailscaled --state=/var/lib/tailscale/tailscaled.state --tun=userspace-networking
+ENV TS_HOST_ENV=dde
+CMD ["/app/tailscaled", "--state=/var/lib/tailscale/tailscaled.state", "--tun=userspace-networking"]
