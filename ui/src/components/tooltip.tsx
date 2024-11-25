@@ -1,4 +1,4 @@
-import React, { useCallback } from "react"
+import React, { MouseEventHandler, useCallback } from "react"
 import * as Primitive from "@radix-ui/react-tooltip"
 
 type Props = {
@@ -22,8 +22,8 @@ export default function Tooltip(props: Props) {
     sideOffset,
   } = props
 
-  const preventDefault = useCallback((e) => e.preventDefault(), [])
-  const handler = closeOnClick ? undefined : preventDefault
+  const preventDefault = useCallback((e: any) => e.preventDefault(), [])
+  const handler: MouseEventHandler<HTMLButtonElement> | undefined = closeOnClick ? undefined : preventDefault
 
   return (
     <Primitive.Root delayDuration={200} open={open} onOpenChange={onOpenChange}>
