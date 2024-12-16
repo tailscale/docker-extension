@@ -8,7 +8,7 @@ type Props = {
   asChild?: boolean
   trigger: React.ReactNode
 } & Pick<
-  MenuPrimitive.MenuContentProps,
+  MenuPrimitive.DropdownMenuContentProps,
   "side" | "sideOffset" | "align" | "alignOffset" | "onCloseAutoFocus"
 > &
   Pick<MenuPrimitive.DropdownMenuProps, "open" | "onOpenChange">
@@ -77,7 +77,7 @@ type CommonMenuItemProps = {
   hidden?: boolean
 }
 
-type DropdownMenuGroupProps = CommonMenuItemProps & MenuPrimitive.MenuGroupProps
+type DropdownMenuGroupProps = CommonMenuItemProps & MenuPrimitive.DropdownMenuGroupProps
 
 function DropdownMenuGroup(props: DropdownMenuGroupProps) {
   const { className, ...rest } = props
@@ -90,7 +90,7 @@ function DropdownMenuGroup(props: DropdownMenuGroupProps) {
 type DropdownMenuItemProps = {
   intent?: "danger"
 } & CommonMenuItemProps &
-  Omit<MenuPrimitive.MenuItemProps, "onClick">
+  Omit<MenuPrimitive.DropdownMenuItemProps, "onClick">
 
 function DropdownMenuItem(props: DropdownMenuItemProps) {
   const { className, disabled, intent, hidden, ...rest } = props
@@ -114,7 +114,7 @@ function DropdownMenuItem(props: DropdownMenuItemProps) {
 type DropdownMenuLinkProps = {
   className?: string
   href: string
-} & Omit<MenuPrimitive.MenuItemProps, "onClick" | "onSelect" | "asChild">
+} & Omit<MenuPrimitive.DropdownMenuItemProps, "onClick" | "onSelect" | "asChild">
 
 function DropdownMenuLink(props: DropdownMenuLinkProps) {
   const { className, children, disabled, href, ...rest } = props
@@ -157,7 +157,7 @@ function DropdownMenuLink(props: DropdownMenuLinkProps) {
 }
 
 type DropdownSeparatorProps = Omit<CommonMenuItemProps, "disabled"> &
-  MenuPrimitive.MenuSeparatorProps
+  MenuPrimitive.DropdownMenuSeparatorProps
 
 function DropdownSeparator(props: DropdownSeparatorProps) {
   const { className, hidden, ...rest } = props
